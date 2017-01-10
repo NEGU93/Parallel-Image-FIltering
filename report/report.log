@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2016.9.25)  10 JAN 2017 19:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2016.9.25)  10 JAN 2017 21:08
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**bare_conf_compsoc.tex
-(./bare_conf_compsoc.tex
+**report.tex
+(./report.tex
 LaTeX2e <2016/03/31> patch level 3
 Babel <3.9r> and hyphenation patterns for 3 language(s) loaded.
 (./IEEEtran.cls
@@ -121,53 +121,52 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24.09> not available
 LaTeX Info: Redefining \cite on input line 302.
 LaTeX Info: Redefining \nocite on input line 332.
 Package: cite 2015/02/27  v 5.5
-)
-(./bare_conf_compsoc.aux)
-\openout1 = `bare_conf_compsoc.aux'.
+) (./report.aux)
+\openout1 = `report.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 329.
-LaTeX Font Info:    ... okay on input line 329.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 210.
+LaTeX Font Info:    ... okay on input line 210.
 
 -- Lines per column: 58 (exact).
-LaTeX Font Info:    Try loading font information for OT1+phv on input line 389.
+LaTeX Font Info:    Try loading font information for OT1+phv on input line 229.
 
 (/usr/share/texlive/texmf-dist/tex/latex/psnfss/ot1phv.fd
 File: ot1phv.fd 2001/06/04 scalable font definitions for OT1/phv.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.05249> not available
-(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 389.
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 229.
 Missing character: There is no Ã in font ptmri7t!
 Missing character: There is no © in font ptmri7t!
 Missing character: There is no Ã in font ptmri7t!
 Missing character: There is no © in font ptmri7t!
 Missing character: There is no Ã in font ptmri7t!
 Missing character: There is no © in font ptmri7t!
-LaTeX Font Info:    Calculating math sizes for size <10.03749> on input line 51
-4.
+LaTeX Font Info:    Calculating math sizes for size <10.03749> on input line 33
+8.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <10.03749> on input line 514.
+(Font)              <10.03749> on input line 338.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <7.0262> on input line 514.
+(Font)              <7.0262> on input line 338.
 LaTeX Font Info:    External font `cmex10' loaded for size
-(Font)              <5.01874> on input line 514.
+(Font)              <5.01874> on input line 338.
 
-Underfull \hbox (badness 10000) in paragraph at lines 561--563
+Underfull \hbox (badness 10000) in paragraph at lines 396--398
 []\OT1/ptm/m/n/8.03 P. Car-rib-ault and F. Tra-hay, \OT1/ptm/m/it/8.03 INF560 E
 val-u-a-tion\OT1/ptm/m/n/8.03 , 3rd ed.
  []
 
 
-Overfull \hbox (117.58691pt too wide) in paragraph at lines 561--563
+Overfull \hbox (117.58691pt too wide) in paragraph at lines 396--398
 \OT1/ptm/m/n/8.03 https://www.enseignement.polytechnique.fr/profs/informatique/
 Francois.Trahay/www/TD/projects/INF560-
  []
@@ -186,22 +185,22 @@ Before submitting the final camera ready copy, remember to:
 [1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
-] (./bare_conf_compsoc.aux) ) 
+] (./report.aux) ) 
 Here is how much of TeX's memory you used:
- 1206 strings out of 494945
- 21650 string characters out of 6181032
- 74500 words of memory out of 5000000
- 4562 multiletter control sequences out of 15000+600000
- 37372 words of font info for 67 fonts, out of 8000000 for 9000
+ 1210 strings out of 494945
+ 21609 string characters out of 6181032
+ 75500 words of memory out of 5000000
+ 4565 multiletter control sequences out of 15000+600000
+ 38479 words of font info for 68 fonts, out of 8000000 for 9000
  17 hyphenation exceptions out of 8191
- 26i,10n,21p,431b,245s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texlive/texmf-dist/fonts/enc/dvips/bas
-e/8r.enc}</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.p
-fb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/
-texlive/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-
-dist/fonts/type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type
-1/urw/times/utmri8a.pfb>
-Output written on bare_conf_compsoc.pdf (1 page, 61972 bytes).
+ 26i,10n,21p,420b,245s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</
+usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/sh
+are/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/
+type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times
+/utmri8a.pfb>
+Output written on report.pdf (1 page, 64222 bytes).
 PDF statistics:
  29 PDF objects out of 1000 (max. 8388607)
  20 compressed objects within 1 object stream

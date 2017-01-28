@@ -602,7 +602,7 @@ apply_gray_filter( animated_gif * image )
 #define CONV(l,c,nb_c) \
     (l)*(nb_c)+(c)
 
-void apply_gray_line( animated_gif * image ) // NOTE: pas de recouvrement
+void apply_gray_line( animated_gif * image ) 
 {
     int i, j, k ;
     pixel ** p ;
@@ -862,10 +862,8 @@ int main( int argc, char ** argv )
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
-    printf("L %lf\n", duration); // added by Francois
-
-//**************************************************
+    printf( "GIF loaded from file %s with %d image(s) in %lf s\n", 
+            input_filename, image->n_images, duration ) ;
 
     /* FILTER Timer start */
     gettimeofday(&t1, NULL);
@@ -873,32 +871,8 @@ int main( int argc, char ** argv )
     /* Convert the pixels into grayscale */
     apply_gray_filter( image ) ;
 
-    /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    printf("G %lf\n", duration); // added by Francois
-
-//**************************************************
-
-    /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
-
     /* Apply blur filter with convergence value */
     apply_blur_filter( image, 5, 20 ) ;
-
-    /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    printf("B %lf\n", duration); // added by Francois
-
-//**************************************************
-
-    /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
 
     /* Apply sobel filter on pixels */
     apply_sobel_filter( image ) ;
@@ -908,8 +882,7 @@ int main( int argc, char ** argv )
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "SOBEL done in %lf s\n", duration ) ; // commented by Francois
-    printf("S %lf\n", duration); // added by Francois
+    printf( "SOBEL done in %lf s\n", duration ) ;
 
     /* EXPORT Timer start */
     gettimeofday(&t1, NULL);
@@ -922,8 +895,7 @@ int main( int argc, char ** argv )
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "Export done in %lf s in file %s\n", duration, output_filename ) ; // commented by Francois
-    printf("E %lf\n", duration); // added by Francois
+    printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
 
     return 0 ;
 }

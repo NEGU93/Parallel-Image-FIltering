@@ -106,9 +106,110 @@ int splitImage(simpleImage* inputImage, simpleImage* destImgArray, int* heightOf
 
 // topOffset = (if positive) nb of lines in the top 10%
 // bottomOffset = (if positive) nb of lines in the bottom 10%
-int parallel_blur_filter(simpleImage* image, int size, int threshold, int topOffset, int bottomOffset)
+int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOffset, int bottomOffset)
 {
+    int width = image->width;
+    int height = image->height;
 
+    int topLimit = max(size, topOffset-size);
+    int bottomLimit = min(height-size, height - bottomOffset+size);
+
+    pixel* p = image->p;
+    pixel* new = (pixel*)malloc(width*height*sizeof(pixel));
+    
+    /* Apply blur on top part of image (10%) */
+    for(j=size; j<topLimit; j++)
+    {
+        for(k=size; k<width-size; k++)
+        {
+            int stencil_j, stencil_k ;
+            int t_r = 0 ;
+            int t_g = 0 ;
+            int t_b = 0 ;
+
+            for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
+            {
+                for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
+                {
+                    t_r += p[CONV(j+stencil_j,k+stencil_k,width)].r ;
+                    t_g += p[CONV(j+stencil_j,k+stencil_k,width)].g ;
+                    t_b += p[CONV(j+stencil_j,k+stencil_k,width)].b ;
+                }
+            }
+
+            new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+            new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+            new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+        }
+    }
+
+    /* Copy the middle part of the image */
+    for(j=toplimit; j<bottomLimit; j++)
+    {
+        for(k=size; k<width-size; k++)
+        {
+            new[CONV(j,k,width)].r = p[CONV(j,k,width)].r ; 
+            new[CONV(j,k,width)].g = p[CONV(j,k,width)].g ; 
+            new[CONV(j,k,width)].b = p[CONV(j,k,width)].b ; 
+        }
+    }
+
+    /* Apply blur on the bottom part of the image (10%) */
+    for(j=bottomLimit; j<height-size; j++)
+    {
+        for(k=size; k<width-size; k++)
+        {
+            int stencil_j, stencil_k ;
+            int t_r = 0 ;
+            int t_g = 0 ;
+            int t_b = 0 ;
+
+            for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
+            {
+                for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
+                {
+                    t_r += p[CONV(j+stencil_j,k+stencil_k,width)].r ;
+                    t_g += p[CONV(j+stencil_j,k+stencil_k,width)].g ;
+                    t_b += p[CONV(j+stencil_j,k+stencil_k,width)].b ;
+                }
+            }
+
+            new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+            new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+            new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+        }
+    }
+
+    for(j=1; j<height-1; j++)
+    {
+        for(k=1; k<width-1; k++)
+        {
+
+            float diff_r ;
+            float diff_g ;
+            float diff_b ;
+
+            diff_r = (new[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
+            diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
+            diff_b = (new[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
+
+            if ( diff_r > threshold || -diff_r > threshold 
+                 ||
+                 diff_g > threshold || -diff_g > threshold
+                 ||
+                 diff_b > threshold || -diff_b > threshold
+                ) {
+                end = 0 ;
+            }
+
+            p[CONV(j  ,k  ,width)].r = new[CONV(j  ,k  ,width)].r ;
+            p[CONV(j  ,k  ,width)].g = new[CONV(j  ,k  ,width)].g ;
+            p[CONV(j  ,k  ,width)].b = new[CONV(j  ,k  ,width)].b ;
+        }
+    }
+
+    free(new);
+    
     return 0;
 }
 

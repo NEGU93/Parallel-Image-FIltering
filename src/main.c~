@@ -574,14 +574,14 @@ store_pixels( char * filename, animated_gif * image )
 }
 
 void
-apply_gray_filter( animated_gif * image )
-{
+apply_gray_filter( animated_gif * image ) {
     int i, j ;
+	int me, P;
     pixel ** p ;
 
     p = image->p ;
 
-    for ( i = 0 ; i < image->n_images ; i++ )
+    for ( i = me ; i < image->n_images ; i += P )
     {
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ )
         {
@@ -840,6 +840,8 @@ int main( int argc, char ** argv ) {
     struct timeval t1, t2;
     double duration ;
 
+	MPI_Init(&argc, &argv); /* Initialization of MPI */
+
     if ( argc < 3 ) {
         fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
         return 1 ;
@@ -894,6 +896,8 @@ int main( int argc, char ** argv ) {
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
     printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
+
+	MPI_Finalize(); /* Finalization of MPI */
 
     return 0 ;
 }

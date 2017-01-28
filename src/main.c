@@ -237,8 +237,7 @@ output_modified_read_gif( char * filename, GifFileType * g )
 
 
 int
-store_pixels( char * filename, animated_gif * image )
-{
+store_pixels( char * filename, animated_gif * image ) {
     int n_colors = 0 ;
     pixel ** p ;
     int i, j, k ;
@@ -840,6 +839,8 @@ int main( int argc, char ** argv ) {
     struct timeval t1, t2;
     double duration ;
 
+	MPI_Init(&argc, &argv); /* Initialization of MPI */
+
     if ( argc < 3 ) {
         fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
         return 1 ;
@@ -894,6 +895,8 @@ int main( int argc, char ** argv ) {
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
     printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
+
+	MPI_Finalize(); /* Finalization of MPI */
 
     return 0 ;
 }

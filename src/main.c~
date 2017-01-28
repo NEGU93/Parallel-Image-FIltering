@@ -574,14 +574,14 @@ store_pixels( char * filename, animated_gif * image )
 }
 
 void
-apply_gray_filter( animated_gif * image ) {
+apply_gray_filter( animated_gif * image )
+{
     int i, j ;
-	int me, P;
     pixel ** p ;
 
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i += P )
+    for ( i = 0 ; i < image->n_images ; i++ )
     {
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ )
         {

@@ -13,9 +13,11 @@
 #include <gif_lib.h>
 
 #define ROOT 	0
+#define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define MIN(x, y) (((x) < (y)) ? (x) : (y))
 
 #define SOBELF_DEBUG 0
-//#define GATHER_DEBUG 0
+#define GATHER_DEBUG 1
 /* Represent one pixel from the image */
 typedef struct pixel
 {
@@ -829,32 +831,51 @@ void apply_sobel_filter( animated_gif * image ) {
 }
 
 int get_everything_together(animated_gif * image) {
+	/*
+	*	Gives all the information received by a process and put it into the root
+	*/
 	int i;
 	int me, P;
 	MPI_Status status;
 	pixel ** p;
 	int width, height, count, n_images;
+	int max_count = 0;
+	pixel ** temp_buf;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
 	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
 	p = image->p;
 	n_images = (image->n_images);
+	for (i = 0; i < n_images; i++) { 	// as each image can have different sizes, 
+										//I make sure to have the larger for a buffer
+		width = image->width[i];
+		height = image->height[i];
+		count = width * height * sizeof(pixel);
+		max_count = MAX(max_count, count);
+	}
+	temp_buf = (pixel **)malloc( max_count * sizeof(pixel *) );
 
 	if (me == ROOT) {
 		#ifdef GATHER_DEBUG
 		fprintf(stderr, "getting everything together for %d processes\n", P);
 		fprintf(stderr, "number of images = %d\n", image->n_images);
 		#endif
-		for (i = 0; i < n_images; i++) {
-			if ((i % P) != ROOT) { // Bad because I get them in order. Is better to use the tag
-				width = image->width[i];
-				height = image->height[i];
-				count = width * height * sizeof(pixel);
-				MPI_Recv(*(p + i), count, MPI_BYTE, i % P, 0, MPI_COMM_WORLD, &status);
-			}
+		for (i = 0; i < n_images; i++) { // Have to eliminate the ones computed by myself
+			if( (i % P) == ROOT) { 
+				#ifdef GATHER_DEBUG
+				fprintf(stderr, "Image %d computed by root\n", i);
+				#endif
+				continue; 
+			} // Don't have to take anything
+			// wait for sth
+			MPI_Recv(*temp_buf, max_count, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 			#ifdef GATHER_DEBUG
-			fprintf(stderr, "Image received from %d\n", i % P);
+			fprintf(stderr, "Image %d received from %d, noy copying it...\n", status.MPI_TAG, status.MPI_SOURCE);
 			#endif
+			width = image->width[status.MPI_TAG];
+			height = image->height[status.MPI_TAG];
+			count = width * height * sizeof(pixel);				
+			memcpy(*(p + status.MPI_TAG), *temp_buf, count);
 		}
 	}
 	else {
@@ -862,7 +883,7 @@ int get_everything_together(animated_gif * image) {
 			width = image->width[i];
 			height = image->height[i];
 			count = width * height * sizeof(pixel);
-			MPI_Send(*(p + i), count, MPI_BYTE, ROOT, 0, MPI_COMM_WORLD);
+			MPI_Send(*(p + i), max_count, MPI_BYTE, ROOT, i, MPI_COMM_WORLD);
 			#ifdef GATHER_DEBUG
 			fprintf(stderr, "Image sent from %d\n", me);
 			#endif

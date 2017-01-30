@@ -7,6 +7,8 @@
 
 #define SOBELF_DEBUG 0
 
+#define CONV(l,c,nb_c) (l)*(nb_c)+(c)
+
 /* Represent one pixel from the image */
 typedef struct pixel
 {

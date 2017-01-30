@@ -15,6 +15,7 @@
 #define ROOT 	0
 
 #define SOBELF_DEBUG 0
+#define MAX
 //#define GATHER_DEBUG 0
 /* Represent one pixel from the image */
 typedef struct pixel
@@ -232,7 +233,6 @@ int output_modified_read_gif( char * filename, GifFileType * g ) {
 
     return 1 ;
 }
-
 
 int store_pixels( char * filename, animated_gif * image ) {
     int n_colors = 0 ;
@@ -832,7 +832,7 @@ int get_everything_together(animated_gif * image) {
 	/*
 	*	Gives all the information received by a process and put it into the root
 	*/
-	int i;
+	int i, m;
 	int me, P;
 	MPI_Status status;
 	pixel ** p;
@@ -848,15 +848,15 @@ int get_everything_together(animated_gif * image) {
 		fprintf(stderr, "getting everything together for %d processes\n", P);
 		fprintf(stderr, "number of images = %d\n", image->n_images);
 		#endif
-		for (i = 0; i < n_images; i++) {
-			if ((i % P) != ROOT) { // Bad because I get them in order. Is better to use the tag
-				width = image->width[i];
-				height = image->height[i];
-				count = width * height * sizeof(pixel);
-				MPI_Recv(*(p + i), count, MPI_BYTE, i % P, 0, MPI_COMM_WORLD, &status);
-				#ifdef GATHER_DEBUG
-				fprintf(stderr, "Image received from %d\n", i % P);
-				#endif
+		for (m = 0; m < P; m++) {	// Better to make it in only one for...
+			if (m != ROOT) {
+				for (i = m; i < n_images; i += P) { 
+					MPI_Recv(&count, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+					#ifdef GATHER_DEBUG
+					fprintf(stderr, "Image %d received from %d\n", status.MPI_TAG, status.MPI_SOURCE);
+					#endif
+					MPI_Recv(*(p + status.MPI_TAG), count, MPI_BYTE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
+				}
 			}
 		}
 	}
@@ -865,9 +865,10 @@ int get_everything_together(animated_gif * image) {
 			width = image->width[i];
 			height = image->height[i];
 			count = width * height * sizeof(pixel);
-			MPI_Send(*(p + i), count, MPI_BYTE, ROOT, 0, MPI_COMM_WORLD);
+			MPI_Send(&count, 1, MPI_INT, ROOT, i, MPI_COMM_WORLD);
+			MPI_Send(*(p + i), count, MPI_BYTE, ROOT, i, MPI_COMM_WORLD);
 			#ifdef GATHER_DEBUG
-			fprintf(stderr, "Image sent from %d\n", me);
+			fprintf(stderr, "Image %d sent from %d\n", i, me);
 			#endif
 		}
 	}

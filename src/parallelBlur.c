@@ -253,6 +253,7 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
 }
 
 
+// WARNING: TODO: can't send and recv simpleImage !!!! (because of pixel* field)
 void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 {
     
@@ -260,6 +261,7 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
     
+    unsigned int sizeSimpleImg = sizeof(simpleImage); // size in bytes
 
     if(myRank == 0)
     {
@@ -268,7 +270,6 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	    exit(1);
 	}
 
-        unsigned int sizeSimpleImg = sizeof(simpleImage); // size in bytes
 	pixel** p = img->p;
 	pixel* new;
 	int i;
@@ -294,36 +295,106 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	    {
 		fillSubImagesArray(img, i, imgArray, heightOffset, widthOffset, nbSubImg);
 
+		end = 1;
+
 		int iImg;
+		int nbImgRecv = 0;
 		MPI_Status s;
 		simpleImage recvImg;
-		int* bufSend; // [topOffset, bottomOffset]
-		bufSend = malloc(2*sizeof(int));
-		for(iImg = 0; iImg < nbSubImg; i++)
+		int* bufSend; // [width, height, topOffset, bottomOffset]
+		bufSend = malloc(4*sizeof(int));
+		for(iImg = 0; iImg < nbSubImg; i++) // TODO: replace so as not to wait ready signal from slaves
 		{
-		    MPI_Recv(&recvImg, sizeSimpleImg, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+		    MPI_Recv(&recvImg, sizeSimpleImg, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s); // TODO
+
+		    int task = s.MPI_SOURCE;
 
 		    if(s.count == sizeSimpleImg)
 		    {
+			int iSubImg = 2*s.MPI_TAG;
 			
+			mergeSubImg(
+			    p[i], img->width[i], &recvImg,
+			    heightOffset[iSubImg], heightOffset[iSubImg+1],
+			    widthOffset[iSubImg], widthOffset[iSubImg+1],
+			    size
+			    );
+			
+			nbImgRecv++;
+
+			int subEnd;
+			MPI_Recv(&subEnd, 1, MPI_INT, task, 0, MPI_COMM_WORLD, NULL);
+
+			end = end && subEnd;
 		    }
 
-		    int task = s.MPI_SOURCE;
-		    MPI_Send(bufSend, 2, MPI_INT, task, 0, MPI_COMM_WORLD);
-		    MPI_Send(imgArray+iImg, sizeSimpleImg, MPI_BYTE, task, 1, MPI_COMM_WORLD);
+		    bufSend[0] = imgArray[iImg].width;
+		    bufSend[1] = imgArray[iImg].height;
+		    bufSend[2] = topOffset[iImg];
+		    bufSend[3] = bottomOffset[iImg];
+
+		    MPI_Send(bufSend, 4, MPI_INT, task, 0, MPI_COMM_WORLD);
+		    int sizeRecvBuf = bufSend[0]*bufSend[1]*sizeof(pixel);
+		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, task, iImg, MPI_COMM_WORLD);
 		}
+
+		for(iImg = nbImgRecv; iImg < nbSubImg; i++)
+		{
+		    MPI_Recv(&recvImg, sizeSimpleImg, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+
+		    int task = s.MPI_SOURCE;
+		    if(s.count != siweSimpleImg)
+		    {
+			fprintf(stderr, "Unexpected recv from task %d\n", task);
+			exit(1);
+		    }
+
+		    int iSubImg = 2*s.MPI_TAG;
+			
+		    mergeSubImg(
+			p[i], img->width[i], &recvImg,
+			heightOffset[iSubImg], heightOffset[iSubImg+1],
+			widthOffset[iSubImg], widthOffset[iSubImg+1],
+			size
+			);
+
+		    int subEnd;
+		    MPI_Recv(&subEnd, 1, MPI_INT, task, 0, MPI_COMM_WORLD, NULL);
+		    
+		    end = end && subEnd;
+		}
+
+
 		free(bufSend);
 
 	    }while(threshold > 0 && !end);
 	}
+
+	// kill each slave
+	// ....... TODO ..........
     }
     else
     {
 	int end = 0;
 
+	// send a ready signal to master root 0
+	MPI_Send(NULL, 0, MPI_BYTE, 0, 1, MPI_COMM_WORLD);
+	int whtbBuf = malloc(4*sizeof(int));
+	simpleImage subImg;
+	int iSubImg;
+	MPI_Status s;
 	do
 	{
+	    MPI_Recv(&whtbBuf, 4, MPI_INT, 0, 0, MPI_COMM_WORLD, NULL);
+	    subImg.width = whtbBuf[0];
+	    subImg.height = whtbBuf[1];
 
+	    MPI_Recv(&(subImg.p), whtbBuf[0]*whtbBuf[1]*sizeof(pixel), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+	    iSubImg = s.MPI_TAG;
+
+	    end = one_iter_blur_filter(subImg, size, threshold, whtbBuf[2], whtbBuf[3]);
+
+	    MPI_Send()
 	} while
     }
 }

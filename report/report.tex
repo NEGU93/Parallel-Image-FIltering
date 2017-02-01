@@ -366,9 +366,19 @@ This is just the inverse of the first part (section \ref{sec:GIF-import}). Conve
 \section{Parallel Optimization Languages}
 %TODO: here we introduce the 3 librariesto do and in what we apply them (n_images, deviding the image.)
 \subsection{MPI}
-
+MPI stands for Message Passing Interface, is a standardized and portable message-passing system to function on a wide variety of parallel computing architectures. MPI takes each worker as a process and standardizes the message passing operation between them.
 \subsubsection{Treating each gif image separately}
-
+Each gif image can have several images saved together, the core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
+Two different ways of organizing the work distribution can be applied:
+\begin{enumerate}
+	\item Static Work Distribution
+	\item Dynamic Work Distribution
+\end{enumerate}
+In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "N" images and "P" processes, we can make a rule that follows the following equation:
+\begin{equation}
+task = n mod P
+\end{equation} 
+Where task will be the number of the process that must work on the image number \"n\".
 \subsection{OpenMP}
 \subsection{CUDA}
 

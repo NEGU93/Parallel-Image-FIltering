@@ -86,7 +86,8 @@
 
 % *** MATH PACKAGES ***
 %
-%\usepackage{amsmath}
+\usepackage{amsmath}
+\newcommand{\Mod}[1]{\ (\text{mod}\ #1)}
 % A popular package from the American Mathematical Society that provides
 % many useful and powerful commands for dealing with mathematics.
 %
@@ -376,9 +377,10 @@ Two different ways of organizing the work distribution can be applied:
 \end{enumerate}
 In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "N" images and "P" processes, we can make a rule that follows the following equation:
 \begin{equation}
-task = n mod P
+task \equiv n \mod P
 \end{equation} 
-Where task will be the number of the process that must work on the image number \"n\".
+Where task will be the number of the process that must work on the image number \textit{n}. Following this rule, should we have 7 images and 7 processes, the distribution will be as follows:
+
 \subsection{OpenMP}
 \subsection{CUDA}
 

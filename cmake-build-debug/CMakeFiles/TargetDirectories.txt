@@ -1,3 +1,0 @@
-/root/Documents/GitHub/Parallel-Image-FIltering/cmake-build-debug/CMakeFiles/edit_cache.dir
-/root/Documents/GitHub/Parallel-Image-FIltering/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/root/Documents/GitHub/Parallel-Image-FIltering/cmake-build-debug/CMakeFiles/Parallel_Image_FIltering.dir

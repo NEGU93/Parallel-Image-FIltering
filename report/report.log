@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2016.9.25)  10 JAN 2017 21:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016/Debian) (preloaded format=pdflatex 2016.9.25)  1 FEB 2017 19:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -151,6 +151,10 @@ Missing character: There is no Ã in font ptmri7t!
 Missing character: There is no © in font ptmri7t!
 Missing character: There is no Ã in font ptmri7t!
 Missing character: There is no © in font ptmri7t!
+
+
+LaTeX Warning: Citation `CoursePage' on page 1 undefined on input line 238.
+
 LaTeX Font Info:    Calculating math sizes for size <10.03749> on input line 33
 8.
 LaTeX Font Info:    External font `cmex10' loaded for size
@@ -160,17 +164,12 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 LaTeX Font Info:    External font `cmex10' loaded for size
 (Font)              <5.01874> on input line 338.
 
-Underfull \hbox (badness 10000) in paragraph at lines 396--398
-[]\OT1/ptm/m/n/8.03 P. Car-rib-ault and F. Tra-hay, \OT1/ptm/m/it/8.03 INF560 E
-val-u-a-tion\OT1/ptm/m/n/8.03 , 3rd ed.
- []
+LaTeX Warning: Citation `CoursePage' on page 1 undefined on input line 342.
+
+[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
 
 
-Overfull \hbox (117.58691pt too wide) in paragraph at lines 396--398
-\OT1/ptm/m/n/8.03 https://www.enseignement.polytechnique.fr/profs/informatique/
-Francois.Trahay/www/TD/projects/INF560-
- []
-
+] (./report.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -182,25 +181,25 @@ Before submitting the final camera ready copy, remember to:
  uses only Type 1 fonts and that every step in the generation
  process uses the appropriate paper size.
 
-[1{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}
+(./report.aux)
 
+LaTeX Warning: There were undefined references.
 
-] (./report.aux) ) 
+ ) 
 Here is how much of TeX's memory you used:
- 1210 strings out of 494945
- 21609 string characters out of 6181032
+ 1211 strings out of 494945
+ 21622 string characters out of 6181032
  75500 words of memory out of 5000000
  4565 multiletter control sequences out of 15000+600000
- 38479 words of font info for 68 fonts, out of 8000000 for 9000
+ 36265 words of font info for 66 fonts, out of 8000000 for 9000
  17 hyphenation exceptions out of 8191
- 26i,10n,21p,420b,245s stack positions out of 5000i,500n,10000p,200000b,80000s
-{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</
-usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/sh
-are/texlive/texmf-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/tex
-mf-dist/fonts/type1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/
-type1/urw/times/utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times
-/utmri8a.pfb>
-Output written on report.pdf (1 page, 64222 bytes).
+ 26i,10n,21p,429b,245s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texlive/texmf-dist/fonts/enc/dvips/base/8r.enc}</usr/share/texliv
+e/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/share/texlive/texm
+f-dist/fonts/type1/urw/times/utmb8a.pfb></usr/share/texlive/texmf-dist/fonts/ty
+pe1/urw/times/utmbi8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/
+utmr8a.pfb></usr/share/texlive/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on report.pdf (1 page, 62873 bytes).
 PDF statistics:
  29 PDF objects out of 1000 (max. 8388607)
  20 compressed objects within 1 object stream

@@ -8,7 +8,13 @@
 
 #include <mpi.h>
 
-#include "communDef.h"
+#include "parallelBlur.h"
+
+#define PARALLEL_DEBUG 1
+#define ROOT 0
+
+#define MAX(a,b) (a > b) ? (a) : (b)
+#define MIN(a,b) (a < b) ? (a) : (b)
 
 // return the number of parts of the inputImage
 // destTopOffset[i] give the limit of the 10%
@@ -44,7 +50,7 @@ int splitImage(int inputWidth, int inputHeight, int* heightOffset, int* widthOff
 
     int resultNb = nbHeight * nbWidth;
 
-    heigthOffset = malloc(2*resultNb * sizeof(int));
+    heightOffset = malloc(2*resultNb * sizeof(int));
     widthOffset = malloc(2*resultNb * sizeof(int));
     destTopOffset = malloc(resultNb * sizeof(int));
     destBottomOffset = malloc(resultNb * sizeof(int));
@@ -55,11 +61,11 @@ int splitImage(int inputWidth, int inputHeight, int* heightOffset, int* widthOff
     {
 	for(y = 0; y < nbWidth; y++)
 	{
-	    heightOffset[2*index] = max(x * (*subHeight) - size, 0);
-	    heightOffset[2*index+1] = min((x + 1) * (*subHeight) + size ,height);
+	    heightOffset[2*index] = MAX(x * (*subHeight) - size, 0);
+	    heightOffset[2*index+1] = MIN((x + 1) * (*subHeight) + size ,height);
 
-	    widthOffset[2*index] = max(y * (*subWidth) - size, 0);
-	    widthOffset[2*index+1] = min((y + 1) * (*subWidth) + size, width);
+	    widthOffset[2*index] = MAX(y * (*subWidth) - size, 0);
+	    widthOffset[2*index+1] = MIN((y + 1) * (*subWidth) + size, width);
 
 	    destTopOffset[index] = topOffset - heightOffset[2*index]; // nb of lines in the top 10% (if positive)
 	    destBottomOffset[index] = heightOffset[2*index+1] - bottomOffset; // nb of lines in the bottom 10% (if positive)
@@ -78,7 +84,7 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
     int inWidth = inputImage->width[numImg];
     pixel* iP = inputImage->p[numImg];
 
-    pixel* outP = destImgArray->p;
+    pixel* outP = destImg->p;
     
     int hOBegin = heightOffset[2*i];
     int hOEnd = heightOffset[2*i+1];
@@ -87,7 +93,7 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
     int wOEnd = widthOffset[2*i+1];
     
     int destWidth = wOEnd - wOEnd;
-    destImg->heigth = hOEnd - hOBegin;
+    destImg->height = hOEnd - hOBegin;
     destImg->width = destWidth;
     
     int x,y;
@@ -110,7 +116,7 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
 int fillSubImagesArray(animated_gif* inputImage, int numImg, simpleImage* destImgArray, int* heightOffset, int* widthOffset, int nbSubImg)
 {
     int i;
-    for(i = 0; i < nbSubImg)
+    for(i = 0; i < nbSubImg; i++)
     {
 	getSubImage(inputImage, numImg, destImgArray + i, heightOffset, widthOffset, i);
     }
@@ -118,10 +124,9 @@ int fillSubImagesArray(animated_gif* inputImage, int numImg, simpleImage* destIm
     return 0;
 }
 
-int mergeSubImg(pixel* new, int width, simpleImage* img, int hOBegin, int hOEnd, int wOBegin, int wOEnd, int size)
+int mergeSubImg(pixel* new, int width, pixel* p, int hOBegin, int hOEnd, int wOBegin, int wOEnd, int size)
 {
-    pixel* p = img->p;
-    int subWidth = img->width;
+    int subWidth = wOEnd-wOBegin;
 
     int x,y;
     for(x = hOBegin+size; x < hOEnd-size; x++)
@@ -146,14 +151,16 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
     int width = image->width;
     int height = image->height;
 
-    int topLimit = max(size, topOffset-size);
-    int bottomLimit = min(height-size, height - bottomOffset+size);
+    int topLimit = MAX(size, topOffset-size);
+    int bottomLimit = MIN(height-size, height - bottomOffset+size);
 
     pixel* p = image->p;
     pixel* new = (pixel*)malloc(width*height*sizeof(pixel));
 
     int end = 1;
     
+    int j,k;
+
     /* Apply blur on top part of image (10%) */
     for(j=size; j<topLimit; j++)
     {
@@ -181,7 +188,7 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
     }
 
     /* Copy the middle part of the image */
-    for(j=toplimit; j<bottomLimit; j++)
+    for(j=topLimit; j<bottomLimit; j++)
     {
         for(k=size; k<width-size; k++)
         {
@@ -228,9 +235,9 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
             float diff_g ;
             float diff_b ;
 
-            diff_r = (new[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
-            diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
-            diff_b = (new[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
+            diff_r = (new[CONV(j  ,k  ,width)].r - p[CONV(j  ,k  ,width)].r) ;
+            diff_g = (new[CONV(j  ,k  ,width)].g - p[CONV(j  ,k  ,width)].g) ;
+            diff_b = (new[CONV(j  ,k  ,width)].b - p[CONV(j  ,k  ,width)].b) ;
 
             if ( diff_r > threshold || -diff_r > threshold 
                  ||
@@ -253,15 +260,27 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
 }
 
 
-// WARNING: TODO: can't send and recv simpleImage !!!! (because of pixel* field)
+
 void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 {
+    #if PARALLEL_BLUR
+    fprintf(stderr, "%d : begin blur filter\n", myRank);
+    #endif
     
     int nbTasks, myRank;
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
     
-    unsigned int sizeSimpleImg = sizeof(simpleImage); // size in bytes
+    
+    int sizeMaxPixels = 0;
+    int i;
+    for(i=0; i < img->n_images; i++)
+    {
+	int v = img->width[i] * img->height[i];
+	if(v > sizeMaxPixels)
+	    sizeMaxPixels = v;
+    }
+    sizeMaxPixels *= sizeof(pixel);
 
     if(myRank == 0)
     {
@@ -273,8 +292,12 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	pixel** p = img->p;
 	pixel* new;
 	int i;
-	for(i=0; i < img->nb_images; i++)
+	for(i=0; i < img->n_images; i++)
 	{
+            #if PARALLEL_BLUR
+            fprintf(stderr, "%d : blur img %d\n", myRank, i);
+            #endif
+            
 	    int* heightOffset;
 	    int* widthOffset;
 	    int* topOffset;
@@ -284,11 +307,20 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	    int subHeight = 3*size;
 	    
 	    // get informations for subimages (can resize subWidth and subHeight)
+            #if PARALLEL_BLUR
+            fprintf(stderr, "%d : just before split img %d\n", myRank, i);
+            #endif
 	    int nbSubImg = splitImage(img->width[i], img->height[i], heightOffset, widthOffset, topOffset, bottomOffset, &subWidth, &subHeight, size);
-	    
+            #if PARALLEL_BLUR
+            fprintf(stderr, "%d : just after split img %d\n", myRank, i);
+            #endif
+
+            
 	    simpleImage* imgArray;
 	    imgArray = (simpleImage*)malloc(nbSubImg * sizeof(simpleImage));
 	    
+	    pixel* recvPixels;
+	    recvPixels = malloc(sizeMaxPixels);
 
 	    int end = 0;
 	    do
@@ -298,61 +330,75 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 		end = 1;
 
 		int iImg;
+		int iTask;
 		int nbImgRecv = 0;
 		MPI_Status s;
-		simpleImage recvImg;
-		int* bufSend; // [width, height, topOffset, bottomOffset]
-		bufSend = malloc(4*sizeof(int));
-		for(iImg = 0; iImg < nbSubImg; i++) // TODO: replace so as not to wait ready signal from slaves
+		
+		int* bufSend; // [width, height, topOffset, bottomOffset, pixelsSize]
+		int bufSendSize = 4;
+		bufSend = malloc(bufSendSize*sizeof(int));
+
+		iImg = 0;
+		iTask = 1;
+		// send a subImg to each slave
+		while(iImg < nbSubImg && iTask < nbTasks)
 		{
-		    MPI_Recv(&recvImg, sizeSimpleImg, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s); // TODO
+		    bufSend[0] = imgArray[iImg].width;
+		    bufSend[1] = imgArray[iImg].height;
+		    bufSend[2] = topOffset[iImg];
+		    bufSend[3] = bottomOffset[iImg];
 
-		    int task = s.MPI_SOURCE;
+		    MPI_Send(bufSend, bufSendSize, MPI_INT, iTask, iImg, MPI_COMM_WORLD);
+		    int sizeRecvBuf = bufSend[0]*bufSend[1]*sizeof(pixel);
+		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
 
-		    if(s.count == sizeSimpleImg)
-		    {
-			int iSubImg = 2*s.MPI_TAG;
+		    iImg++;
+		    iTask++;
+		}
+
+
+		for(; iImg < nbSubImg; i++)
+		{
+		    MPI_Recv(recvPixels, sizeMaxPixels, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+
+		    iTask = s.MPI_SOURCE;
+		    int iSubImg = 2*s.MPI_TAG;
 			
-			mergeSubImg(
-			    p[i], img->width[i], &recvImg,
-			    heightOffset[iSubImg], heightOffset[iSubImg+1],
-			    widthOffset[iSubImg], widthOffset[iSubImg+1],
-			    size
-			    );
-			
-			nbImgRecv++;
-
-			int subEnd;
-			MPI_Recv(&subEnd, 1, MPI_INT, task, 0, MPI_COMM_WORLD, NULL);
-
-			end = end && subEnd;
-		    }
+		    mergeSubImg(
+			p[i], img->width[i], recvPixels,
+			heightOffset[iSubImg], heightOffset[iSubImg+1],
+			widthOffset[iSubImg], widthOffset[iSubImg+1],
+			size
+			);
+		    
+		    nbImgRecv++;
+		    
+		    int subEnd;
+		    MPI_Recv(&subEnd, 1, MPI_INT, iTask, s.MPI_TAG, MPI_COMM_WORLD, NULL);
+		    
+		    end = end && subEnd;
+		    
 
 		    bufSend[0] = imgArray[iImg].width;
 		    bufSend[1] = imgArray[iImg].height;
 		    bufSend[2] = topOffset[iImg];
 		    bufSend[3] = bottomOffset[iImg];
 
-		    MPI_Send(bufSend, 4, MPI_INT, task, 0, MPI_COMM_WORLD);
+		    MPI_Send(bufSend, bufSendSize, MPI_INT, iTask, 0, MPI_COMM_WORLD);
 		    int sizeRecvBuf = bufSend[0]*bufSend[1]*sizeof(pixel);
-		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, task, iImg, MPI_COMM_WORLD);
+		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
 		}
 
 		for(iImg = nbImgRecv; iImg < nbSubImg; i++)
 		{
-		    MPI_Recv(&recvImg, sizeSimpleImg, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+		    MPI_Recv(recvPixels, sizeMaxPixels, MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
 
 		    int task = s.MPI_SOURCE;
-		    if(s.count != siweSimpleImg)
-		    {
-			fprintf(stderr, "Unexpected recv from task %d\n", task);
-			exit(1);
-		    }
 
 		    int iSubImg = 2*s.MPI_TAG;
 			
 		    mergeSubImg(
-			p[i], img->width[i], &recvImg,
+			p[i], img->width[i], recvPixels,
 			heightOffset[iSubImg], heightOffset[iSubImg+1],
 			widthOffset[iSubImg], widthOffset[iSubImg+1],
 			size
@@ -366,43 +412,76 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 
 
 		free(bufSend);
+		
 
 	    }while(threshold > 0 && !end);
+
+	    free(recvPixels);
+	    free(imgArray);
 	}
 
 	// kill each slave
-	// ....... TODO ..........
+	int iTask;
+	for(iTask = 1; iTask < nbTasks; iTask++)
+	{
+	    MPI_Send(NULL, 0, MPI_INT, iTask, 0, MPI_COMM_WORLD);
+	}
+
     }
     else
     {
-	int end = 0;
+        #if PARALLEL_BLUR
+        fprintf(stderr, "%d : begin slave part\n", myRank);
+        #endif
+        
+	int endBlur = 0;
 
-	// send a ready signal to master root 0
-	MPI_Send(NULL, 0, MPI_BYTE, 0, 1, MPI_COMM_WORLD);
-	int whtbBuf = malloc(4*sizeof(int));
+	int* whtbBuf;
+	whtbBuf = malloc(4*sizeof(int));
 	simpleImage subImg;
+	subImg.p = malloc(sizeMaxPixels);
 	int iSubImg;
 	MPI_Status s;
+	int count = 0;
 	do
 	{
-	    MPI_Recv(&whtbBuf, 4, MPI_INT, 0, 0, MPI_COMM_WORLD, NULL);
+            #if PARALLEL_BLUR
+            fprintf(stderr, "slave %d : wait for a msg\n", myRank);
+            #endif
+            
+	    MPI_Recv(whtbBuf, 4, MPI_INT, 0, 0, MPI_COMM_WORLD, &s);
+	    MPI_Get_count(&s, MPI_INT, &count);
+	    if(count < 1)
+	    {
+		// end of work as slave
+		break;
+	    }
+
 	    subImg.width = whtbBuf[0];
 	    subImg.height = whtbBuf[1];
 
-	    MPI_Recv(&(subImg.p), whtbBuf[0]*whtbBuf[1]*sizeof(pixel), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+	    MPI_Recv(subImg.p, whtbBuf[0]*whtbBuf[1]*sizeof(pixel), MPI_BYTE, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
 	    iSubImg = s.MPI_TAG;
 
-	    end = one_iter_blur_filter(subImg, size, threshold, whtbBuf[2], whtbBuf[3]);
+	    endBlur = one_iter_blur_filter(&subImg, size, threshold, whtbBuf[2], whtbBuf[3]);
 
-	    MPI_Send()
-	} while
+	    MPI_Send(subImg.p, whtbBuf[0]*whtbBuf[1]*sizeof(pixel), MPI_BYTE, 0, iSubImg, MPI_COMM_WORLD);
+	    MPI_Send(&endBlur, 1, MPI_INT, 0, iSubImg, MPI_COMM_WORLD);
+	} while(true);
+	    
+	free(whtbBuf);
+	free(subImg.p);
     }
 }
 
 
-int main(int argc, char** argv)
+int main_parallel_blur(int argc, char** argv)
 {
     MPI_Init(&argc, &argv);
+
+    int nbTasks, myRank;
+    MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 
     char * input_filename ; 
     char * output_filename ;
@@ -419,54 +498,81 @@ int main(int argc, char** argv)
     input_filename = argv[1] ;
     output_filename = argv[2] ;
 
-    /* IMPORT Timer start */
-    gettimeofday(&t1, NULL);
+    if(myRank == ROOT)
+    {
+        /* IMPORT Timer start */
+        gettimeofday(&t1, NULL);
+        
+        /* Load file and store the pixels in array */
+        image = load_pixels( input_filename ) ;
+        if ( image == NULL ) { return 1 ; }
+        
+        /* IMPORT Timer stop */
+        gettimeofday(&t2, NULL);
+        
+        duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+        
+        printf( "GIF loaded from file %s with %d image(s) in %lf s\n", 
+                input_filename, image->n_images, duration ) ;
+        
+        /* FILTER Timer start */
+        gettimeofday(&t1, NULL);
 
-    /* Load file and store the pixels in array */
-    image = load_pixels( input_filename ) ;
-    if ( image == NULL ) { return 1 ; }
+        /* Convert the pixels into grayscale */
+        apply_gray_filter( image ) ;
 
-    /* IMPORT Timer stop */
-    gettimeofday(&t2, NULL);
+        /* Apply blur filter with convergence value */
+        //apply_blur_filter( image, 5, 20 ) ; // TO BE REPLACED
 
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+        #if PARALLEL_DEBUG
+        fprintf(stderr, "%d : just before blur\n", myRank);
+        #endif
+        
+        apply_blur_filter_dynamic(image, 5, 20);
 
-    printf( "GIF loaded from file %s with %d image(s) in %lf s\n", 
-            input_filename, image->n_images, duration ) ;
+        #if PARALLEL_DEBUG
+        fprintf(stderr, "%d : just after blur\n", myRank);
+        #endif
+        
+        /* Apply sobel filter on pixels */
+        apply_sobel_filter( image ) ;
+        
+        /* FILTER Timer stop */
+        gettimeofday(&t2, NULL);
+        
+        duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+        
+        printf( "SOBEL done in %lf s\n", duration ) ;
+        
+        /* EXPORT Timer start */
+        gettimeofday(&t1, NULL);
+        
+        /* Store file from array of pixels to GIF file */
+        if ( !store_pixels( output_filename, image ) ) { return 1 ; }
+        
+        /* EXPORT Timer stop */
+        gettimeofday(&t2, NULL);
+        
+        duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+        
+        printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
+    }
+    else // not root
+    {
+        image = (animated_gif*)load_pixels( input_filename ) ;
+        if ( image == NULL ) { return 1 ; }
 
-    /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
+        #if PARALLEL_DEBUG
+        fprintf(stderr, "%d : just before blur\n", myRank);
+        #endif
+        
+        apply_blur_filter_dynamic(image, 5, 20);
 
-    /* Convert the pixels into grayscale */
-    apply_gray_filter( image ) ;
-
-    /* Apply blur filter with convergence value */
-    //apply_blur_filter( image, 5, 20 ) ; // TO BE REPLACED
-    apply_blur_filter_dynamic(image, 5, 20);
-
-    /* Apply sobel filter on pixels */
-    apply_sobel_filter( image ) ;
-
-    /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    printf( "SOBEL done in %lf s\n", duration ) ;
-
-    /* EXPORT Timer start */
-    gettimeofday(&t1, NULL);
-
-    /* Store file from array of pixels to GIF file */
-    if ( !store_pixels( output_filename, image ) ) { return 1 ; }
-
-    /* EXPORT Timer stop */
-    gettimeofday(&t2, NULL);
-
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
-
+        #if PARALLEL_DEBUG
+        fprintf(stderr, "%d : just after blur\n", myRank);
+        #endif
+    }
+    
     MPI_Finalize();
 
     return 0;

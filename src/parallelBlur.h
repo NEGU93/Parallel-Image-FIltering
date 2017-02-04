@@ -9,10 +9,12 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
 
 int fillSubImagesArray(animated_gif* inputImage, int numImg, simpleImage* destImgArray, int* heightOffset, int* widthOffset, int nbSubImg);
 
-int mergeSubImg(pixel* new, int width, simpleImage* img, int hOBegin, int hOEnd, int wOBegin, int wOEnd, int size);
+int mergeSubImg(pixel* new, int width, pixel* img, int hOBegin, int hOEnd, int wOBegin, int wOEnd, int size);
 
 int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOffset, int bottomOffset);
 
 void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold);
+
+int main_parallel_blur(int argc, char** argv);
 
 #endif

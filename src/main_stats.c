@@ -4,8 +4,33 @@
  * Image Filtering Project
  */
 
-#include "communDef.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <sys/time.h>
 
+#include <gif_lib.h>
+
+#define SOBELF_DEBUG 0
+
+/* Represent one pixel from the image */
+typedef struct pixel
+{
+    int r ; /* Red */
+    int g ; /* Green */
+    int b ; /* Blue */
+} pixel ;
+
+/* Represent one GIF image (animated or not */
+typedef struct animated_gif
+{
+    int n_images ; /* Number of images */
+    int * width ; /* Width of each image */
+    int * height ; /* Height of each image */
+    pixel ** p ; /* Pixels of each image */
+    GifFileType * g ; /* Internal representation.
+                         DO NOT MODIFY */
+} animated_gif ;
 
 /*
  * Load a GIF image from a file and return a
@@ -805,4 +830,100 @@ apply_sobel_filter( animated_gif * image )
         free (sobel) ;
     }
 
+}
+
+int main( int argc, char ** argv )
+{
+
+    char * input_filename ; 
+    char * output_filename ;
+    animated_gif * image ;
+    struct timeval t1, t2;
+    double duration ;
+
+    if ( argc < 3 )
+    {
+        fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
+        return 1 ;
+    }
+
+    input_filename = argv[1] ;
+    output_filename = argv[2] ;
+
+    /* IMPORT Timer start */
+    gettimeofday(&t1, NULL);
+
+    /* Load file and store the pixels in array */
+    image = load_pixels( input_filename ) ;
+    if ( image == NULL ) { return 1 ; }
+
+    /* IMPORT Timer stop */
+    gettimeofday(&t2, NULL);
+
+    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+
+    //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
+    printf("L %lf\n", duration); // added by Francois
+
+//**************************************************
+
+    /* FILTER Timer start */
+    gettimeofday(&t1, NULL);
+
+    /* Convert the pixels into grayscale */
+    apply_gray_filter( image ) ;
+
+    /* FILTER Timer stop */
+    gettimeofday(&t2, NULL);
+
+    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+
+    printf("G %lf\n", duration); // added by Francois
+
+//**************************************************
+
+    /* FILTER Timer start */
+    gettimeofday(&t1, NULL);
+
+    /* Apply blur filter with convergence value */
+    apply_blur_filter( image, 5, 20 ) ;
+
+    /* FILTER Timer stop */
+    gettimeofday(&t2, NULL);
+
+    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+
+    printf("B %lf\n", duration); // added by Francois
+
+//**************************************************
+
+    /* FILTER Timer start */
+    gettimeofday(&t1, NULL);
+
+    /* Apply sobel filter on pixels */
+    apply_sobel_filter( image ) ;
+
+    /* FILTER Timer stop */
+    gettimeofday(&t2, NULL);
+
+    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+
+    //printf( "SOBEL done in %lf s\n", duration ) ; // commented by Francois
+    printf("S %lf\n", duration); // added by Francois
+
+    /* EXPORT Timer start */
+    gettimeofday(&t1, NULL);
+
+    /* Store file from array of pixels to GIF file */
+    if ( !store_pixels( output_filename, image ) ) { return 1 ; }
+
+    /* EXPORT Timer stop */
+    gettimeofday(&t2, NULL);
+
+    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+
+    //printf( "Export done in %lf s in file %s\n", duration, output_filename ) ; // commented by Francois
+    printf("E %lf\n", duration); // added by Francois
+
+    return 0 ;
 }

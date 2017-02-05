@@ -2,7 +2,7 @@ SRC_DIR=src
 HEADER_DIR=include
 OBJ_DIR=obj
 
-CC=gcc
+CC=mpicc
 CFLAGS=-O3 -I$(HEADER_DIR)
 LDFLAGS=-lm
 
@@ -13,6 +13,7 @@ SRC= dgif_lib.c \
 	gif_hash.c \
 	gifalloc.c \
 	communDef.c \
+#	parallelBlur.c \
 	MPI_blur_filter.c \
 	main.c \
 	openbsd-reallocarray.c \
@@ -25,7 +26,8 @@ OBJ= $(OBJ_DIR)/dgif_lib.o \
 	$(OBJ_DIR)/gif_hash.o \
 	$(OBJ_DIR)/gifalloc.o \
 	$(OBJ_DIR)/communDef.o \
-	$(OBJ_DIR)/MPI_blur_filter.o \
+#	$(OBJ_DIR)/parallelBlur.o \
+	$(OBJ_DIR)/MPI_blur_filter.o \	
 	$(OBJ_DIR)/main.o \
 	$(OBJ_DIR)/openbsd-reallocarray.o \
 	$(OBJ_DIR)/quantize.o

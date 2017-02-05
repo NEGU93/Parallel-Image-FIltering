@@ -79,6 +79,10 @@ int splitImage(int inputWidth, int inputHeight, int* heightOffset, int* widthOff
 // destImg must exist and contains a simpleImage
 int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int* heightOffset, int* widthOffset, int myNum)
 {
+    #if PARALLEL_DEBUG
+    fprintf(stderr, "--> test 1\n");
+    #endif
+
     int i = myNum;
     
     int inWidth = inputImage->width[numImg];
@@ -95,7 +99,11 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
     int destWidth = wOEnd - wOEnd;
     destImg->height = hOEnd - hOBegin;
     destImg->width = destWidth;
-    
+
+    #if PARALLEL_DEBUG
+    fprintf(stderr, "--> test 2\n");
+    #endif
+
     int x,y;
     for(x = hOBegin; x < hOEnd; x++)
     {
@@ -107,6 +115,9 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
 	}
     }
     
+    #if PARALLEL_DEBUG
+    fprintf(stderr, "--> test 3\n");
+    #endif
     
     return 0;
 }
@@ -115,11 +126,23 @@ int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int*
 // destImgArray must be created before call
 int fillSubImagesArray(animated_gif* inputImage, int numImg, simpleImage* destImgArray, int* heightOffset, int* widthOffset, int nbSubImg)
 {
+        #if PARALLEL_DEBUG
+    fprintf(stderr, "-> fill %d subImg\n", nbSubImg);
+        #endif
+
     int i;
     for(i = 0; i < nbSubImg; i++)
     {
+	#if PARALLEL_DEBUG
+	fprintf(stderr, "-> just before getSubImage %d\n", i);
+        #endif
 	getSubImage(inputImage, numImg, destImgArray + i, heightOffset, widthOffset, i);
     }
+
+    
+#if PARALLEL_DEBUG
+    fprintf(stderr, "-> end fill %d subImg\n", nbSubImg);
+        #endif
 
     return 0;
 }
@@ -263,13 +286,13 @@ int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOff
 
 void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 {
-    #if PARALLEL_BLUR
-    fprintf(stderr, "%d : begin blur filter\n", myRank);
-    #endif
-    
     int nbTasks, myRank;
     MPI_Comm_size(MPI_COMM_WORLD, &nbTasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+
+    #if PARALLEL_DEBUG
+    fprintf(stderr, "%d : begin blur filter\n", myRank);
+    #endif
     
     
     int sizeMaxPixels = 0;
@@ -294,7 +317,7 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	int i;
 	for(i=0; i < img->n_images; i++)
 	{
-            #if PARALLEL_BLUR
+            #if PARALLEL_DEBUG
             fprintf(stderr, "%d : blur img %d\n", myRank, i);
             #endif
             
@@ -307,11 +330,11 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	    int subHeight = 3*size;
 	    
 	    // get informations for subimages (can resize subWidth and subHeight)
-            #if PARALLEL_BLUR
+            #if PARALLEL_DEBUG
             fprintf(stderr, "%d : just before split img %d\n", myRank, i);
             #endif
 	    int nbSubImg = splitImage(img->width[i], img->height[i], heightOffset, widthOffset, topOffset, bottomOffset, &subWidth, &subHeight, size);
-            #if PARALLEL_BLUR
+            #if PARALLEL_DEBUG
             fprintf(stderr, "%d : just after split img %d\n", myRank, i);
             #endif
 
@@ -325,7 +348,14 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	    int end = 0;
 	    do
 	    {
+
+		#if PARALLEL_DEBUG
+		fprintf(stderr, "%d : just before fillSubImagesArray\n", myRank);
+                #endif
 		fillSubImagesArray(img, i, imgArray, heightOffset, widthOffset, nbSubImg);
+		#if PARALLEL_DEBUG
+		fprintf(stderr, "%d : just after fillSubImagesArray\n", myRank);
+                #endif
 
 		end = 1;
 
@@ -341,6 +371,9 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 		iImg = 0;
 		iTask = 1;
 		// send a subImg to each slave
+		#if PARALLEL_DEBUG
+		fprintf(stderr, "%d : just before send to each slave\n", myRank);
+                #endif
 		while(iImg < nbSubImg && iTask < nbTasks)
 		{
 		    bufSend[0] = imgArray[iImg].width;
@@ -350,11 +383,15 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 
 		    MPI_Send(bufSend, bufSendSize, MPI_INT, iTask, iImg, MPI_COMM_WORLD);
 		    int sizeRecvBuf = bufSend[0]*bufSend[1]*sizeof(pixel);
-		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
+		    MPI_Send(imgArray[iImg].p, sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
 
 		    iImg++;
 		    iTask++;
 		}
+
+		#if PARALLEL_DEBUG
+		fprintf(stderr, "%d : just after send to each slave\n", myRank);
+                #endif
 
 
 		for(; iImg < nbSubImg; i++)
@@ -386,7 +423,7 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 
 		    MPI_Send(bufSend, bufSendSize, MPI_INT, iTask, 0, MPI_COMM_WORLD);
 		    int sizeRecvBuf = bufSend[0]*bufSend[1]*sizeof(pixel);
-		    MPI_Send(&(imgArray[iImg].p), sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
+		    MPI_Send(imgArray[iImg].p, sizeRecvBuf, MPI_BYTE, iTask, iImg, MPI_COMM_WORLD);
 		}
 
 		for(iImg = nbImgRecv; iImg < nbSubImg; i++)
@@ -430,7 +467,7 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
     }
     else
     {
-        #if PARALLEL_BLUR
+        #if PARALLEL_DEBUG
         fprintf(stderr, "%d : begin slave part\n", myRank);
         #endif
         
@@ -445,7 +482,7 @@ void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold)
 	int count = 0;
 	do
 	{
-            #if PARALLEL_BLUR
+            #if PARALLEL_DEBUG
             fprintf(stderr, "slave %d : wait for a msg\n", myRank);
             #endif
             

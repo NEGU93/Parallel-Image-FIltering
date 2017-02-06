@@ -1,0 +1,7 @@
+File eztrace_output.trace.trace
+
+
+Warnings :
+427558 : extra token(s) ignored
+
+Your trace has 0 errors and 1 warnings.

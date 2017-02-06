@@ -573,7 +573,7 @@ void apply_gray_filter( animated_gif * image ) {
 
     p = image->p ;
 
-	//#pragma omp parallel for schedule(static, 1) private(i, j)
+	#pragma omp parallel for private(i, j)
     for ( i = 0 ; i < image->n_images ; i++ ) {
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
             int moy ;
@@ -599,7 +599,7 @@ void apply_gray_line( animated_gif * image ) {
 
     p = image->p ;
 
-	#pragma omp parallel for schedule(static, 1) private(i, j)
+	//#pragma omp parallel for schedule(static, 1) private(i, j)
     for ( i = 0 ; i < image->n_images ; i++ ) {
         for ( j = 0 ; j < 10 ; j++ ) {
             for ( k = image->width[i]/2 ; k < image->width[i] ; k++ )
@@ -750,8 +750,7 @@ void apply_sobel_filter( animated_gif * image ) {
 
     p = image->p ;
 
-    for ( i = 0 ; i < image->n_images ; i++ )
-    {
+    for ( i = 0 ; i < image->n_images ; i++ ) {
         width = image->width[i] ;
         height = image->height[i] ;
 
@@ -759,10 +758,8 @@ void apply_sobel_filter( animated_gif * image ) {
 
         sobel = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 
-        for(j=1; j<height-1; j++)
-        {
-            for(k=1; k<width-1; k++)
-            {
+        for(j=1; j<height-1; j++) {
+            for(k=1; k<width-1; k++)  {
                 int pixel_blue_no, pixel_blue_n, pixel_blue_ne;
                 int pixel_blue_so, pixel_blue_s, pixel_blue_se;
                 int pixel_blue_o , pixel_blue  , pixel_blue_e ;
@@ -788,13 +785,11 @@ void apply_sobel_filter( animated_gif * image ) {
                 val_blue = sqrt(deltaX_blue * deltaX_blue + deltaY_blue * deltaY_blue)/4;
 
 
-                if ( val_blue > 50 ) 
-                {
+                if ( val_blue > 50 ) {
                     sobel[CONV(j  ,k  ,width)].r = 255 ;
                     sobel[CONV(j  ,k  ,width)].g = 255 ;
                     sobel[CONV(j  ,k  ,width)].b = 255 ;
-                } else
-                {
+                } else {
                     sobel[CONV(j  ,k  ,width)].r = 0 ;
                     sobel[CONV(j  ,k  ,width)].g = 0 ;
                     sobel[CONV(j  ,k  ,width)].b = 0 ;
@@ -802,10 +797,8 @@ void apply_sobel_filter( animated_gif * image ) {
             }
         }
 
-        for(j=1; j<height-1; j++)
-        {
-            for(k=1; k<width-1; k++)
-            {
+        for(j=1; j<height-1; j++) {
+            for(k=1; k<width-1; k++) {
                 p[i][CONV(j  ,k  ,width)].r = sobel[CONV(j  ,k  ,width)].r ;
                 p[i][CONV(j  ,k  ,width)].g = sobel[CONV(j  ,k  ,width)].g ;
                 p[i][CONV(j  ,k  ,width)].b = sobel[CONV(j  ,k  ,width)].b ;

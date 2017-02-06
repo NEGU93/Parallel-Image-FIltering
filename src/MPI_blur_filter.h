@@ -13,10 +13,13 @@
 #define OVERLAPSIZE 5
 #define THRESHOLD 20
 
+// get sub img refSize (coef * size)
+#define COEF_REFSIZE 3
+
 // use to split the top and the bottom of the image
-// return simpleImage of size 0x0 when no more sub images
+// return NULL if no more sub images
 // WARNING: pBuffer need to be big enough
-simpleImage getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer);
+simpleImage* getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer);
 
 
 // apply blur on inputImg
@@ -28,7 +31,7 @@ int blurOneIter(simpleImage* inputImg, int size, int threshold);
 void slaveBlur(int size, int threshold);
 
 // apply blur to each image
-void masterBlur(animated_gif* image, int size, int threshold);
+void masterBlur(animated_gif* image, int size, int threshold, int nbTasks);
 
 
 

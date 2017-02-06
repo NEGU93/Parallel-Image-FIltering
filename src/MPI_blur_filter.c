@@ -71,7 +71,8 @@ int main_mpi_blur_filter(int argc, char** argv)
 	gettimeofday(&t1, NULL);
 
 	/* Apply blur filter with convergence value */
-	apply_blur_filter( image, OVERLAPSIZE, THRESHOLD ) ;
+//	apply_blur_filter( image, OVERLAPSIZE, THRESHOLD ) ;
+	masterBlur(image, OVERLAPSIZE, THRESHOLD, nbTasks);
 
 	/* FILTER Timer stop */
 	gettimeofday(&t2, NULL);
@@ -122,7 +123,7 @@ int main_mpi_blur_filter(int argc, char** argv)
 
 
 
-simpleImage getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer)
+simpleImage* getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer)
 {
     static int x;
     static int y;
@@ -133,10 +134,7 @@ simpleImage getNextSubImg(pixel* inputImg, int width, int height, int overlapSiz
         y = 0;
     }
     
-    simpleImage result;
-    result.width = 0;
-    result.height = 0;
-    result.p = NULL;
+    simpleImage* result = NULL;
 
     if(x >= height || refSize <= 2*overlapSize)
         return result;
@@ -168,9 +166,10 @@ simpleImage getNextSubImg(pixel* inputImg, int width, int height, int overlapSiz
         }
     }
 
-    result.height = h;
-    result.width = w;
-    result.p = pBuffer;
+    result = malloc(sizeof(simpleImage));
+    result->height = h;
+    result->width = w;
+    result->p = pBuffer;
 
     printf("DEBUG: (x,y) = (%d,%d) | (h,w) = (%d,%d)\n", x, y, h, w);
 
@@ -328,7 +327,99 @@ void slaveBlur(int size, int threshold)
 }
 
 
-void masterBlur(animated_gif* image, int size, int threshold)
+void masterBlurOnePart(pixel* inputImg, int width, int height, int size, int threshold, int nbTasks)
 {
+    int end; // TODO
+}
 
+void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
+{
+    if(nbTasks < 2)
+    {
+	fprintf(stderr, "Not enough tasks: masterBlur function needs at least 2 tasks\n");
+	
+#ifdef DEV_DEBUG
+	fprintf(stderr, "Abort on line %d\n\n", __LINE__);
+#endif
+	fflush(stderr);
+	MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    int refSize = COEF_REFSIZE * size;
+
+    int i;
+    int idSubImg, iTask;
+    int end;
+    int width, height;
+
+    int* dimBuf = (int*)malloc(2 * sizeof(int)); // [width, height] of subimage
+    pixel* pBuffer = NULL;
+    pixel* input = NULL;
+    pixel* new = NULL;
+    simpleImage* subImg = NULL;
+
+    // process all images
+    for(i = 0; i < image->n_images; i++)
+    {
+	end = 1;
+	width = image->width[i];
+	height = image->height[i];
+
+	pBuffer = (pixel*)malloc(width * height * sizeof(pixel));
+	if(pBuffer == NULL)
+	{
+	    fprintf(stderr, "Error of allocation\n");
+
+#ifdef DEV_DEBUG
+	    fprintf(stderr, "Abort on line %d\n\n", __LINE__);
+#endif
+	    fflush(stderr);
+	    MPI_Abort(MPI_COMM_WORLD, 1);
+	}
+
+	input = image->p[i];
+	
+        // blur top
+	do
+	{
+	    idSubImg = 0;
+	    // one subimg to each slave
+	    iTask = 1;
+	    do
+	    {
+		
+		subImg = getNextSubImg(input, width, height/10, size, refSize, (idSubImg == 0), pBuffer);
+		idSubImg++;
+		
+		if(subImg->p == NULL)
+		{
+		    break;
+		}
+		
+		dimBuf[0] = subImg->width;
+		dimBuf[1] = subImg->height;
+		int sizePBuf = dimBuf[0] * dimBuf[1] * sizeof(pixel);
+
+		MPI_Send(dimBuf, 2, MPI_INT, iTask, idSubImg, MPI_COMM_WORLD);
+		MPI_Send(pBuffer, sizePBuf, MPI_BYTE, iTask, idSubImg, MPI_COMM_WORLD);
+		
+		iTask++;
+	    }while(iTask < nbTasks);
+
+	    // send rest of subImg
+	    while(subImg->p != NULL)
+	    {
+
+	    }
+	    
+	} while(!end);
+	
+	free(pBuffer);
+	pBuffer = NULL;
+	
+    }
+
+    free(dimBuf);
+    free(new);
+    free(subImg);
 }

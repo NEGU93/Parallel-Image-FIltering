@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
+#include <omp.h> 		/* OpenMP lib */
 
 #include <gif_lib.h>
 
@@ -572,7 +573,7 @@ void apply_gray_filter( animated_gif * image ) {
 
     p = image->p ;
 
-	#pragma omp parallel for schedule(static, 1) private(i, j)
+	#pragma omp parallel for private(i, j)
     for ( i = 0 ; i < image->n_images ; i++ ) {
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
             int moy ;
@@ -598,10 +599,9 @@ void apply_gray_line( animated_gif * image ) {
 
     p = image->p ;
 
-    for ( i = 0 ; i < image->n_images ; i++ )
-    {
-        for ( j = 0 ; j < 10 ; j++ )
-        {
+	//#pragma omp parallel for schedule(static, 1) private(i, j)
+    for ( i = 0 ; i < image->n_images ; i++ ) {
+        for ( j = 0 ; j < 10 ; j++ ) {
             for ( k = image->width[i]/2 ; k < image->width[i] ; k++ )
             {
             p[i][CONV(j,k,image->width[i])].r = 0 ;
@@ -848,9 +848,9 @@ int main( int argc, char ** argv ) {
     //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration );
 	fprintf(stdout, "L %lf\n", duration);
 
-		/********************
-		*	APPLY FILTER	*
-		********************/
+		/************************
+		*	APPLY GRAY FILTER	*
+		************************/
     /* FILTER Timer start */
     gettimeofday(&t1, NULL);
     /* Convert the pixels into grayscale */
@@ -860,6 +860,9 @@ int main( int argc, char ** argv ) {
 	duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 	fprintf(stdout, "G %lf\n", duration);
 
+		/************************
+		*	APPLY BLUR FILTER	*
+		************************/
 	/* FILTER Timer start */
     gettimeofday(&t1, NULL);
     /* Apply blur filter with convergence value */
@@ -869,7 +872,9 @@ int main( int argc, char ** argv ) {
 	duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 	fprintf(stdout, "B %lf\n", duration);
 
-
+		/************************
+		*	APPLY SOBEL FILTER	*
+		************************/
 	/* FILTER Timer start */
     gettimeofday(&t1, NULL);
     /* Apply sobel filter on pixels */
@@ -878,9 +883,11 @@ int main( int argc, char ** argv ) {
     gettimeofday(&t2, NULL);
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 	fprintf(stdout, "S %lf\n", duration);
-
     //printf( "SOBEL done in %lf s\n", duration ) ;
 
+		/************************
+		*	EXPORT GIF IMAGE	*
+		************************/
     /* EXPORT Timer start */
     gettimeofday(&t1, NULL);
     /* Store file from array of pixels to GIF file */

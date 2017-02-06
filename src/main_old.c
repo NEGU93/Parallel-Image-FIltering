@@ -834,7 +834,6 @@ apply_sobel_filter( animated_gif * image )
 
 int main( int argc, char ** argv )
 {
-
     char * input_filename ; 
     char * output_filename ;
     animated_gif * image ;

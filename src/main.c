@@ -5,6 +5,8 @@
 
 int main( int argc, char ** argv )
 {
+    /*
+    // TEST getNextSubImg
     int height = 10;
     int width = 10;
     int overlapSize = 1;
@@ -19,12 +21,12 @@ int main( int argc, char ** argv )
     int i,j;
     for(i = 0; i < height; i++)
     {
-	for(j = 0; j < width; j++)
-	{
-	    input[CONV(i,j,width)].r = 0;
-	    input[CONV(i,j,width)].g = 0;
-	    input[CONV(i,j,width)].b = 0;
-	}
+    for(j = 0; j < width; j++)
+    {
+    input[CONV(i,j,width)].r = 0;
+    input[CONV(i,j,width)].g = 0;
+    input[CONV(i,j,width)].b = 0;
+    }
     }
     printf("Init input: done.\n");
 
@@ -33,18 +35,41 @@ int main( int argc, char ** argv )
     simpleImage r;
     do
     {
-	r = getNextSubImg(input, width, height, overlapSize, size, (count == 0), pBuf);
+    r = getNextSubImg(input, width, height, overlapSize, size, (count == 0), pBuf);
 
-	if(r.p == NULL)
-	    break;
+    if(r.p == NULL)
+    break;
 
-	count++;
+    count++;
     }while(1);
 
     printf("Test: done. Count = %d\n", count);
 
     free(input);
     free(pBuf);
+    // END TEST getNextSubImg
+    */
+
+    /*
+    // TEST blurOneIter
+    int height = 10;
+    int width = 10;
+    int overlapSize = 5;
+    int threshold = 10;
+
+    simpleImage inputImage;
+    inputImage.height = height;
+    inputImage.width = width;
+    inputImage.p = malloc(height * width * sizeof(pixel));
+
+    printf("Result of blurOneIter(&inputImage, %d, %d) = %d\n", overlapSize, threshold, blurOneIter(&inputImage,overlapSize,threshold));
+
+    free(inputImage.p);
+    inputImage.p = NULL;
+    // END TEST blurOneIter
+    */
+
+    main_mpi_blur_filter(argc, argv);
 
     return 0;
 }

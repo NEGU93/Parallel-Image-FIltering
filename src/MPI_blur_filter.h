@@ -11,6 +11,8 @@
 // WARNING: pBuffer need to be big enough
 simpleImage getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer);
 
+int blurOneIter(simpleImage inputImg, int size, int threshold);
+
 int main_mpi_blur_filter(int argc, char** argv);
 
 #endif

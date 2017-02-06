@@ -43,3 +43,4 @@ sobelf:$(OBJ)
 
 clean:
 	rm -f sobelf $(OBJ)
+

@@ -36,9 +36,7 @@ typedef struct animated_gif
  * Load a GIF image from a file and return a
  * structure of type animated_gif.
  */
-animated_gif *
-load_pixels( char * filename ) 
-{
+animated_gif *load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
@@ -195,9 +193,7 @@ load_pixels( char * filename )
     return image ;
 }
 
-int 
-output_modified_read_gif( char * filename, GifFileType * g ) 
-{
+int output_modified_read_gif( char * filename, GifFileType * g ) {
     GifFileType * g2 ;
     int error2 ;
 
@@ -236,9 +232,7 @@ output_modified_read_gif( char * filename, GifFileType * g )
 }
 
 
-int
-store_pixels( char * filename, animated_gif * image )
-{
+int store_pixels( char * filename, animated_gif * image ) {
     int n_colors = 0 ;
     pixel ** p ;
     int i, j, k ;
@@ -573,9 +567,7 @@ store_pixels( char * filename, animated_gif * image )
     return 1 ;
 }
 
-void
-apply_gray_filter( animated_gif * image )
-{
+void apply_gray_filter( animated_gif * image ) {
     int i, j ;
     pixel ** p ;
 
@@ -602,8 +594,7 @@ apply_gray_filter( animated_gif * image )
 #define CONV(l,c,nb_c) \
     (l)*(nb_c)+(c)
 
-void apply_gray_line( animated_gif * image ) 
-{
+void apply_gray_line( animated_gif * image ) {
     int i, j, k ;
     pixel ** p ;
 
@@ -623,9 +614,7 @@ void apply_gray_line( animated_gif * image )
     }
 }
 
-void
-apply_blur_filter( animated_gif * image, int size, int threshold )
-{
+void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int i, j, k ;
     int width, height ;
     int end = 0 ;
@@ -755,9 +744,7 @@ apply_blur_filter( animated_gif * image, int size, int threshold )
 
 }
 
-void
-apply_sobel_filter( animated_gif * image )
-{
+void apply_sobel_filter( animated_gif * image ) {
     int i, j, k ;
     int width, height ;
 
@@ -832,8 +819,7 @@ apply_sobel_filter( animated_gif * image )
 
 }
 
-int main( int argc, char ** argv )
-{
+int main( int argc, char ** argv ) {
 
     char * input_filename ; 
     char * output_filename ;

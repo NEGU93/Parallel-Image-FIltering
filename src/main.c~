@@ -8,15 +8,11 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-#include <mpi.h> /* MPI function signatures */
 
 #include <gif_lib.h>
 
-#define ROOT 	0
-
 #define SOBELF_DEBUG 0
-#define MAX
-//#define GATHER_DEBUG 0
+
 /* Represent one pixel from the image */
 typedef struct pixel
 {
@@ -40,11 +36,12 @@ typedef struct animated_gif
  * Load a GIF image from a file and return a
  * structure of type animated_gif.
  */
-animated_gif *load_pixels( char * filename ) {
+animated_gif *
+load_pixels( char * filename ) 
+{
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
-	int me, P;
     int n_images ;
     int * width ;
     int * height ;
@@ -52,20 +49,20 @@ animated_gif *load_pixels( char * filename ) {
     int i ;
     animated_gif * image ;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-
     /* Open the GIF image (read mode) */
     g = DGifOpenFileName( filename, &error ) ;
-    if ( g == NULL ) {
+    if ( g == NULL ) 
+    {
         fprintf( stderr, "Error DGifOpenFileName %s\n", filename ) ;
         return NULL ;
     }
 
     /* Read the GIF image */
     error = DGifSlurp( g ) ;
-    if ( error != GIF_OK ) {
-        fprintf( stderr, "Error DGifSlurp: %d <%s>\n", error, GifErrorString(g->Error) ) ;
+    if ( error != GIF_OK )
+    {
+        fprintf( stderr, 
+                "Error DGifSlurp: %d <%s>\n", error, GifErrorString(g->Error) ) ;
         return NULL ;
     }
 
@@ -73,22 +70,28 @@ animated_gif *load_pixels( char * filename ) {
     n_images = g->ImageCount ;
 
     width = (int *)malloc( n_images * sizeof( int ) ) ;
-    if ( width == NULL ) {
-        fprintf( stderr, "Unable to allocate width of size %d\n", n_images ) ;
+    if ( width == NULL )
+    {
+        fprintf( stderr, "Unable to allocate width of size %d\n",
+                n_images ) ;
         return 0 ;
     }
 
     height = (int *)malloc( n_images * sizeof( int ) ) ;
-    if ( height == NULL ) {
-        fprintf( stderr, "Unable to allocate height of size %d\n", n_images ) ;
+    if ( height == NULL )
+    {
+        fprintf( stderr, "Unable to allocate height of size %d\n",
+                n_images ) ;
         return 0 ;
     }
 
     /* Fill the width and height */
-    for ( i = me ; i < n_images ; i += P ) {
+    for ( i = 0 ; i < n_images ; i++ ) 
+    {
         width[i] = g->SavedImages[i].ImageDesc.Width ;
         height[i] = g->SavedImages[i].ImageDesc.Height ;
-		#if SOBELF_DEBUG
+
+#if SOBELF_DEBUG
         printf( "Image %d: l:%d t:%d w:%d h:%d interlace:%d localCM:%p\n",
                 i, 
                 g->SavedImages[i].ImageDesc.Left,
@@ -98,60 +101,71 @@ animated_gif *load_pixels( char * filename ) {
                 g->SavedImages[i].ImageDesc.Interlace,
                 g->SavedImages[i].ImageDesc.ColorMap
                 ) ;
-		#endif
+#endif
     }
 
 
     /* Get the global colormap */
     colmap = g->SColorMap ;
-    if ( colmap == NULL ) {
+    if ( colmap == NULL ) 
+    {
         fprintf( stderr, "Error global colormap is NULL\n" ) ;
         return NULL ;
     }
 
-	#if SOBELF_DEBUG
+#if SOBELF_DEBUG
     printf( "Global CM: count:%d bpp:%d sort:%d\n",
             g->SColorMap->ColorCount,
             g->SColorMap->BitsPerPixel,
             g->SColorMap->SortFlag
             ) ;
-	#endif
+#endif
 
     /* Allocate the array of pixels to be returned */
     p = (pixel **)malloc( n_images * sizeof( pixel * ) ) ;
-    if ( p == NULL ) {
-        fprintf( stderr, "Unable to allocate array of %d images\n", n_images ) ;
+    if ( p == NULL )
+    {
+        fprintf( stderr, "Unable to allocate array of %d images\n",
+                n_images ) ;
         return NULL ;
     }
 
-    for ( i = 0 ; i < n_images ; i++ ) {
+    for ( i = 0 ; i < n_images ; i++ ) 
+    {
         p[i] = (pixel *)malloc( width[i] * height[i] * sizeof( pixel ) ) ;
-        if ( p[i] == NULL ) {
+        if ( p[i] == NULL )
+        {
         fprintf( stderr, "Unable to allocate %d-th array of %d pixels\n",
                 i, width[i] * height[i] ) ;
         return NULL ;
         }
     }
     
-    /* Fill pixels **********************************
-	*	Here, each process will only load it's own	*
-	************************************************/
+    /* Fill pixels */
 
     /* For each image */
-    for ( i = me ; i < n_images ; i += P ) {
+    for ( i = 0 ; i < n_images ; i++ )
+    {
         int j ;
+
         /* Get the local colormap if needed */
-        if ( g->SavedImages[i].ImageDesc.ColorMap ) {
+        if ( g->SavedImages[i].ImageDesc.ColorMap )
+        {
+
             /* TODO No support for local color map */
             fprintf( stderr, "Error: application does not support local colormap\n" ) ;
             return NULL ;
+
             colmap = g->SavedImages[i].ImageDesc.ColorMap ;
         }
 
         /* Traverse the image and fill pixels */
-        for ( j = 0 ; j < width[i] * height[i] ; j++ ) {
+        for ( j = 0 ; j < width[i] * height[i] ; j++ ) 
+        {
             int c ;
+
             c = g->SavedImages[i].RasterBits[j] ;
+
             p[i][j].r = colmap->Colors[c].Red ;
             p[i][j].g = colmap->Colors[c].Green ;
             p[i][j].b = colmap->Colors[c].Blue ;
@@ -160,7 +174,8 @@ animated_gif *load_pixels( char * filename ) {
 
     /* Allocate image info */
     image = (animated_gif *)malloc( sizeof(animated_gif) ) ;
-    if ( image == NULL ) {
+    if ( image == NULL ) 
+    {
         fprintf( stderr, "Unable to allocate memory for animated_gif\n" ) ;
         return NULL ;
     }
@@ -172,14 +187,17 @@ animated_gif *load_pixels( char * filename ) {
     image->p = p ;
     image->g = g ;
 
-	#if SOBELF_DEBUG
-    printf( "-> GIF w/ %d image(s) with first image of size %d x %d\n", image->n_images, image->width[0], image->height[0] ) ;
-	#endif
+#if SOBELF_DEBUG
+    printf( "-> GIF w/ %d image(s) with first image of size %d x %d\n",
+            image->n_images, image->width[0], image->height[0] ) ;
+#endif
 
     return image ;
 }
 
-int output_modified_read_gif( char * filename, GifFileType * g ) {
+int 
+output_modified_read_gif( char * filename, GifFileType * g ) 
+{
     GifFileType * g2 ;
     int error2 ;
 
@@ -217,7 +235,10 @@ int output_modified_read_gif( char * filename, GifFileType * g ) {
     return 1 ;
 }
 
-int store_pixels( char * filename, animated_gif * image ) {
+
+int
+store_pixels( char * filename, animated_gif * image )
+{
     int n_colors = 0 ;
     pixel ** p ;
     int i, j, k ;
@@ -552,27 +573,28 @@ int store_pixels( char * filename, animated_gif * image ) {
     return 1 ;
 }
 
-void apply_gray_filter( animated_gif * image ) {
+void
+apply_gray_filter( animated_gif * image )
+{
     int i, j ;
-	int me, P;
     pixel ** p ;
-	
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i+= P ) {
-        for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
+    for ( i = 0 ; i < image->n_images ; i++ )
+    {
+        for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ )
+        {
             int moy ;
 
             // moy = p[i][j].r/4 + ( p[i][j].g * 3/4 ) ;
-            moy = (p[i][j].r + p[i][j].g + p[i][j].b)/3;
-            if ( moy < 0 ) moy = 0;
-            if ( moy > 255 ) moy = 255;
+            moy = (p[i][j].r + p[i][j].g + p[i][j].b)/3 ;
+            if ( moy < 0 ) moy = 0 ;
+            if ( moy > 255 ) moy = 255 ;
 
-            p[i][j].r = moy;
-            p[i][j].g = moy;
-            p[i][j].b = moy;
+            p[i][j].r = moy ;
+            p[i][j].g = moy ;
+            p[i][j].b = moy ;
         }
     }
 }
@@ -580,17 +602,14 @@ void apply_gray_filter( animated_gif * image ) {
 #define CONV(l,c,nb_c) \
     (l)*(nb_c)+(c)
 
-void apply_gray_line( animated_gif * image ) // NOTE: pas de recouvrement
+void apply_gray_line( animated_gif * image ) 
 {
     int i, j, k ;
-	int me, P;
     pixel ** p ;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i+= P )
+    for ( i = 0 ; i < image->n_images ; i++ )
     {
         for ( j = 0 ; j < 10 ; j++ )
         {
@@ -604,23 +623,24 @@ void apply_gray_line( animated_gif * image ) // NOTE: pas de recouvrement
     }
 }
 
-void apply_blur_filter( animated_gif * image, int size, int threshold ) {
+void
+apply_blur_filter( animated_gif * image, int size, int threshold )
+{
     int i, j, k ;
     int width, height ;
     int end = 0 ;
     int n_iter = 0 ;
-	int me, P;
+
     pixel ** p ;
     pixel * new ;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     /* Get the pixels of all images */
     p = image->p ;
 
 
     /* Process all images */
-    for ( i = me ; i < image->n_images ; i+= P ) {
+    for ( i = 0 ; i < image->n_images ; i++ )
+    {
         n_iter = 0 ;
         width = image->width[i] ;
         height = image->height[i] ;
@@ -735,17 +755,18 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 
 }
 
-void apply_sobel_filter( animated_gif * image ) {
+void
+apply_sobel_filter( animated_gif * image )
+{
     int i, j, k ;
     int width, height ;
-	int me, P;
-    pixel ** p;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+    pixel ** p ;
+
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i += P ) {
+    for ( i = 0 ; i < image->n_images ; i++ )
+    {
         width = image->width[i] ;
         height = image->height[i] ;
 
@@ -811,64 +832,17 @@ void apply_sobel_filter( animated_gif * image ) {
 
 }
 
-int get_everything_together(animated_gif * image) {
-	/*
-	*	Gives all the information received by a process and put it into the root
-	*/
-	int i, m;
-	int me, P;
-	MPI_Status status;
-	pixel ** p;
-	int width, height, count, n_images;
+int main( int argc, char ** argv )
+{
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-	p = image->p;
-	n_images = (image->n_images);
-
-	if (me == ROOT) {
-		#ifdef GATHER_DEBUG
-		fprintf(stderr, "getting everything together for %d processes\n", P);
-		fprintf(stderr, "number of images = %d\n", image->n_images);
-		#endif
-		for (m = 0; m < P; m++) {	// Better to make it in only one for...
-			if (m != ROOT) {
-				for (i = m; i < n_images; i += P) { 
-					MPI_Recv(&count, 1, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-					#ifdef GATHER_DEBUG
-					fprintf(stderr, "Image %d received from %d\n", status.MPI_TAG, status.MPI_SOURCE);
-					#endif
-					MPI_Recv(*(p + status.MPI_TAG), count, MPI_BYTE, status.MPI_SOURCE, status.MPI_TAG, MPI_COMM_WORLD, &status);
-				}
-			}
-		}
-	}
-	else {
-		for ( i = me; i < n_images; i+= P ) {
-			width = image->width[i];
-			height = image->height[i];
-			count = width * height * sizeof(pixel);
-			MPI_Send(&count, 1, MPI_INT, ROOT, i, MPI_COMM_WORLD);
-			MPI_Send(*(p + i), count, MPI_BYTE, ROOT, i, MPI_COMM_WORLD);
-			#ifdef GATHER_DEBUG
-			fprintf(stderr, "Image %d sent from %d\n", i, me);
-			#endif
-		}
-	}
-}
-
-int main( int argc, char ** argv ) {
     char * input_filename ; 
     char * output_filename ;
     animated_gif * image ;
     struct timeval t1, t2;
     double duration ;
-	int me;
-	
-	MPI_Init(&argc, &argv); /* Initialization of MPI */
-	
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-    if ( argc < 3 ) {
+
+    if ( argc < 3 )
+    {
         fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
         return 1 ;
     }
@@ -880,10 +854,7 @@ int main( int argc, char ** argv ) {
     gettimeofday(&t1, NULL);
 
     /* Load file and store the pixels in array */
-	//if (me == ROOT) {
-    image = load_pixels( input_filename );
-	//}
-	//MPI_Bcast(image, , MPI_datatype, ROOT, MPI_COMM_WORLD);
+    image = load_pixels( input_filename ) ;
     if ( image == NULL ) { return 1 ; }
 
     /* IMPORT Timer stop */
@@ -891,73 +862,40 @@ int main( int argc, char ** argv ) {
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
-	if (me == ROOT) { fprintf(stdout, "L %lf\n", duration); } // added by Francois
-
-//**************************************************
+    printf( "GIF loaded from file %s with %d image(s) in %lf s\n", 
+            input_filename, image->n_images, duration ) ;
 
     /* FILTER Timer start */
     gettimeofday(&t1, NULL);
 
-	
     /* Convert the pixels into grayscale */
     apply_gray_filter( image ) ;
-	//fprintf(stderr, "Apply gray filter done on %d\n", me);
-    /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
 
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    if (me == ROOT) { fprintf(stdout, "G %lf\n", duration); } // added by Francois
-
-//**************************************************
-
-    /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
-	//fprintf(stderr, "Doing blur filter on %d\n", me);
     /* Apply blur filter with convergence value */
     apply_blur_filter( image, 5, 20 ) ;
-	//fprintf(stderr, "Apply blur filter done on %d\n", me);
-    /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-
-    if (me == ROOT) { fprintf(stdout, "B %lf\n", duration); } // added by Francois
-
-//**************************************************
-
-    /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
 
     /* Apply sobel filter on pixels */
     apply_sobel_filter( image ) ;
-	//fprintf(stderr, "Apply sobel filter done on %d\n", me);
+
     /* FILTER Timer stop */
     gettimeofday(&t2, NULL);
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "SOBEL done in %lf s\n", duration ) ; // commented by Francois
-    if (me == ROOT) { fprintf(stdout, "S %lf\n", duration); } // added by Francois
+    printf( "SOBEL done in %lf s\n", duration ) ;
 
     /* EXPORT Timer start */
     gettimeofday(&t1, NULL);
 
-	get_everything_together(image);
     /* Store file from array of pixels to GIF file */
-	if (me == ROOT) {
-    	if ( !store_pixels( output_filename, image ) ) { return 1 ; }
-	}
+    if ( !store_pixels( output_filename, image ) ) { return 1 ; }
 
     /* EXPORT Timer stop */
     gettimeofday(&t2, NULL);
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    //printf( "Export done in %lf s in file %s\n", duration, output_filename ) ; // commented by Francois
-    if (me == ROOT) { fprintf(stdout, "E %lf\n", duration); } // added by Francois
+    printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
 
-	MPI_Finalize(); /* Finalization of MPI */
     return 0 ;
 }

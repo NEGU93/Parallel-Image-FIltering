@@ -384,8 +384,8 @@ Where task will be the number of the process that must work on the image number 
 %added by Kujyto
 %begin of Kujyto's part
 \subsubsection{Treating subparts of each image}
-A master task split the input images in subpart and send each subpart to a slave task, which compute the blur filter.
-After the work, the master task merge each part of the original image and finish the blur filter iteration.
+A master task splits the input images in subpart and sends each subpart to a slave task, which compute the blur filter.
+After the work, the master task merges each part of the original image and finishes the blur filter iteration.
 
 This work can be done as long as the difference between the input image and the blured image is bigger than a predefined threshold.
 

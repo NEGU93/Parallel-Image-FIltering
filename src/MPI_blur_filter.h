@@ -16,6 +16,8 @@
 // get sub img refSize (coef * size)
 #define COEF_REFSIZE 3
 
+#define DEV_DEBUG // TODO: comment this line
+
 // use to split the top and the bottom of the image
 // return NULL if no more sub images
 // WARNING: pBuffer need to be big enough
@@ -29,6 +31,10 @@ int blurOneIter(simpleImage* inputImg, int size, int threshold);
 
 // wait for an image to blur
 void slaveBlur(int size, int threshold);
+
+
+void mergeSubImg(pixel* result, int width, int height, simpleImage bluredImg, int size);
+
 
 // apply blur to each image
 void masterBlur(animated_gif* image, int size, int threshold, int nbTasks);

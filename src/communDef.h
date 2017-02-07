@@ -31,6 +31,8 @@ typedef struct animated_gif
 
 typedef struct simpleImage  // added by Francois
 {
+    int offsetX; /* offset height top left corner */
+    int offsetY; /* offset width top left corner */
     int width;  /* width of the image */
     int height; /* height of the image */
     pixel* p;   /* pixels of the image*/

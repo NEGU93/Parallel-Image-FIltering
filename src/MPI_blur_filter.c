@@ -167,11 +167,13 @@ simpleImage* getNextSubImg(pixel* inputImg, int width, int height, int overlapSi
     }
 
     result = malloc(sizeof(simpleImage));
+    result->offsetX = x;
+    result->offsetY = y;
     result->height = h;
     result->width = w;
     result->p = pBuffer;
 
-    printf("DEBUG: (x,y) = (%d,%d) | (h,w) = (%d,%d)\n", x, y, h, w);
+//    printf("DEBUG: (x,y) = (%d,%d) | (h,w) = (%d,%d)\n", x, y, h, w);
 
     int i, j;
     for(i = 0; i < h; i++)
@@ -266,33 +268,27 @@ int blurOneIter(simpleImage* inputImg, int size, int threshold)
 
 void slaveBlur(int size, int threshold)
 {
-    int idImg = 0;
-    int sizePixels = 0;
-    int blurEnd = 0;
-    simpleImage myImg;
+    int idImg = 0; // id of the received image
+    int sizePixels = 0; // size of the pixels array
+    int blurEnd = 0; // end of blur ?
+    simpleImage myImg; // image received
     myImg.p = NULL;
 
-    int* dimBuf = (int*)malloc(2 * sizeof(int)); // [width, height]
     MPI_Status s;
 
     while(true)
     {
-	MPI_Recv(dimBuf, 2, MPI_INT, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
 
-	// get id of image
+	// get simpleImage
+	MPI_Recv(&myImg, sizeof(simpleImage), MPI_BYTE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+	
 	idImg = s.MPI_TAG;
-
-	if(idImg < 0)
+	if(idImg == 0)
 	{
 	    // end of work
 	    break;
 	}
 
-	// get dimensions
-	myImg.width = dimBuf[0];
-	myImg.height = dimBuf[1];
-
-	// create pixels array
 	sizePixels = myImg.width * myImg.height * sizeof(pixel);
 	myImg.p = malloc(sizePixels);
 	if(myImg.p == NULL)
@@ -307,29 +303,188 @@ void slaveBlur(int size, int threshold)
 	    MPI_Abort(MPI_COMM_WORLD,1);
 	}
 
-	// get image
-	MPI_Recv(myImg.p,  sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD, &s);
+	MPI_Recv(myImg.p, sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD, NULL);
+	// simpleImage got
+
+/**************************************************/
 
 	// apply blur
 	blurEnd = blurOneIter(&myImg, size, threshold);
 
-	// send to root
-	// image
+
+/**************************************************/
+	// send simpleImage
+	MPI_Send(&myImg, sizeof(simpleImage), MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD);
 	MPI_Send(myImg.p, sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD);
-	// blur end
 	MPI_Send(&blurEnd, 1, MPI_INT, ROOT, idImg, MPI_COMM_WORLD);
+	// simpleImage sent
+	
 
 	free(myImg.p);
 	myImg.p = NULL;
     }
 
-    free(dimBuf);
+}
+
+
+void mergeSubImg(pixel* result, int width, int height, simpleImage bluredImg, int size)
+{
+    int x, y;
+    pixel* p = bluredImg.p;
+
+    for(x = size; x < bluredImg.height - size; x++)
+    {
+	for(y = size; y < bluredImg.width - size; y++)
+	{
+	    result[CONV(x+bluredImg.offsetX, y+bluredImg.offsetY, width)].r = p[CONV(x,y,bluredImg.width)].r;
+	    result[CONV(x+bluredImg.offsetX, y+bluredImg.offsetY, width)].g = p[CONV(x,y,bluredImg.width)].g;
+	    result[CONV(x+bluredImg.offsetX, y+bluredImg.offsetY, width)].b = p[CONV(x,y,bluredImg.width)].b;
+	}
+    } 
 }
 
 
 void masterBlurOnePart(pixel* inputImg, int width, int height, int size, int threshold, int nbTasks)
-{
-    int end; // TODO
+{// TODO
+    int end;
+    int iTask; // next slave
+    int idImg; // id of subImg
+    int nbToWait; // nb of image to wait
+
+    int refSize = (int)(COEF_REFSIZE * size);
+    int sizePixels;
+    
+    simpleImage* subImg = NULL;
+
+    pixel* resultImg = NULL;
+    resultImg = (pixel*)malloc(width * height * sizeof(pixel));
+    if(resultImg == NULL)
+    {
+	fprintf(stderr, "Error of allocation\n");
+
+#ifdef DEV_DEBUG
+	fprintf(stderr, "Abort on line %d\n\n", __LINE__);
+#endif
+	fflush(stderr);
+	MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+
+    pixel* pBuffer = NULL;
+    pBuffer = (pixel*)malloc(width * height * sizeof(pixel));
+    if(pBuffer == NULL)
+    {
+	fprintf(stderr, "Error of allocation\n");
+
+#ifdef DEV_DEBUG
+	fprintf(stderr, "Abort on line %d\n\n", __LINE__);
+#endif
+	fflush(stderr);
+	MPI_Abort(MPI_COMM_WORLD, 1);
+    }
+
+    // blur
+    do
+    {
+	end = 1;
+	iTask = 0;
+	idImg = 1;
+	nbToWait = 0;
+
+	// send one part to each slave
+	while(iTask < nbTasks)
+	{
+	    if(iTask == ROOT)
+	    {
+		iTask++;
+		continue;
+	    }
+	    
+	    subImg = getNextSubImg(inputImg, width, height, size, refSize, (idImg == 1), pBuffer);
+
+	    if(subImg == NULL)
+	    {
+		// all subImg sent
+		break;
+	    }
+
+            /**************************************************/
+
+	    // send simpleImage
+	    MPI_Send(subImg, sizeof(simpleImage), MPI_BYTE, iTask, idImg, MPI_COMM_WORLD);
+	    sizePixels = subImg->width * subImg->height * sizeof(pixel);
+	    MPI_Send(subImg->p, sizePixels, MPI_BYTE, iTask, idImg, MPI_COMM_WORLD);
+	    // simpelImage sent
+
+            /**************************************************/
+
+	    free(subImg);
+	    subImg = NULL;
+
+	    iTask++;
+	    idImg++;
+	    nbToWait++;
+	}
+
+	// wait for slaves
+	simpleImage recvImg;
+	MPI_Status s;
+	int slaveEnd;
+	int recvIdImg;
+	while(nbToWait > 0)
+	{
+	    // receive simpleImage
+	    MPI_Recv(&recvImg, sizeof(simpleImage), MPI_BYTE, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+	    recvImg.p = pBuffer;
+	    sizePixels = recvImg.width * recvImg.height * sizeof(pixel);
+	    iTask = s.MPI_SOURCE;
+	    recvIdImg = s.MPI_TAG;
+	    MPI_Recv(recvImg.p, sizePixels, MPI_BYTE, iTask, recvIdImg, MPI_COMM_WORLD, NULL);
+	    MPI_Recv(&slaveEnd, 1, MPI_INT, iTask, recvIdImg, MPI_COMM_WORLD, NULL);
+	    
+	    end = end && slaveEnd;
+
+	    nbToWait--;
+
+	    mergeSubImg(resultImg, width, height, recvImg, size);
+
+	    /**************************************************/
+
+	    // send new subimage
+	    subImg = getNextSubImg(inputImg, width, height, size, refSize, (idImg == 1), pBuffer);
+
+	    if(subImg != NULL)
+	    {
+		// send simpleImage
+		MPI_Send(subImg, sizeof(simpleImage), MPI_BYTE, iTask, idImg, MPI_COMM_WORLD);
+		sizePixels = subImg->width * subImg->height * sizeof(pixel);
+		MPI_Send(subImg->p, sizePixels, MPI_BYTE, iTask, idImg, MPI_COMM_WORLD);
+		// simpelImage sent
+
+		nbToWait++;
+		idImg++;
+
+		free(subImg);
+	    }
+	}
+
+
+	// copy resultImg in inputImg
+	int x, y;
+	for(x=0; x < height; x++)
+	{
+	    for(y=0; y < width; y++)
+	    {
+		inputImg[CONV(x,y,width)].r = resultImg[CONV(x,y,width)].r;
+		inputImg[CONV(x,y,width)].g = resultImg[CONV(x,y,width)].g;
+		inputImg[CONV(x,y,width)].b = resultImg[CONV(x,y,width)].b;
+	    }
+	}
+
+    }while(threshold > 0 && !end);
+
+    free(pBuffer);
+    free(resultImg);
 }
 
 void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
@@ -345,81 +500,30 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
 	MPI_Abort(MPI_COMM_WORLD, 1);
     }
 
-    int refSize = COEF_REFSIZE * size;
-
     int i;
-    int idSubImg, iTask;
-    int end;
     int width, height;
 
-    int* dimBuf = (int*)malloc(2 * sizeof(int)); // [width, height] of subimage
-    pixel* pBuffer = NULL;
     pixel* input = NULL;
-    pixel* new = NULL;
-    simpleImage* subImg = NULL;
 
     // process all images
     for(i = 0; i < image->n_images; i++)
     {
-	end = 1;
+#ifdef DEV_DEBUG
+	printf("Master blur image %d / %d\n", i, image->n_images);
+	fflush(stdout);
+#endif
+
 	width = image->width[i];
 	height = image->height[i];
-
-	pBuffer = (pixel*)malloc(width * height * sizeof(pixel));
-	if(pBuffer == NULL)
-	{
-	    fprintf(stderr, "Error of allocation\n");
-
-#ifdef DEV_DEBUG
-	    fprintf(stderr, "Abort on line %d\n\n", __LINE__);
-#endif
-	    fflush(stderr);
-	    MPI_Abort(MPI_COMM_WORLD, 1);
-	}
 
 	input = image->p[i];
 	
         // blur top
-	do
-	{
-	    idSubImg = 0;
-	    // one subimg to each slave
-	    iTask = 1;
-	    do
-	    {
-		
-		subImg = getNextSubImg(input, width, height/10, size, refSize, (idSubImg == 0), pBuffer);
-		idSubImg++;
-		
-		if(subImg->p == NULL)
-		{
-		    break;
-		}
-		
-		dimBuf[0] = subImg->width;
-		dimBuf[1] = subImg->height;
-		int sizePBuf = dimBuf[0] * dimBuf[1] * sizeof(pixel);
+	masterBlurOnePart(input, width, height/10, size, threshold, nbTasks);
 
-		MPI_Send(dimBuf, 2, MPI_INT, iTask, idSubImg, MPI_COMM_WORLD);
-		MPI_Send(pBuffer, sizePBuf, MPI_BYTE, iTask, idSubImg, MPI_COMM_WORLD);
-		
-		iTask++;
-	    }while(iTask < nbTasks);
-
-	    // send rest of subImg
-	    while(subImg->p != NULL)
-	    {
-
-	    }
-	    
-	} while(!end);
-	
-	free(pBuffer);
-	pBuffer = NULL;
+	// blur bottom
+	masterBlurOnePart(input+(CONV((int)(height*0.9),0,width)), width, height/10, size, threshold, nbTasks);
 	
     }
 
-    free(dimBuf);
-    free(new);
-    free(subImg);
 }

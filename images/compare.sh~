@@ -1,0 +1,3 @@
+composite originalFiltered/051009.vince-sobel.gif processed/051009.vince-sobel.gif -compose difference compared/051009.vince-sobel.gif
+
+

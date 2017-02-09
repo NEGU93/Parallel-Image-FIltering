@@ -42,11 +42,12 @@ int main(int argc, char** argv)
 	    break;
 
 	default:
+	    nbLines--;
 	    break;
 	}
     }
 
-    nbInputs = nbLines / 5;
+    nbInputs = nbLines;
 
     printf("%d inputs\n", nbInputs);
 

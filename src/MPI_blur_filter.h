@@ -39,6 +39,10 @@ void killSlaves(int nbTasks);
 
 void masterBlurOnePart(pixel* inputImg, int width, int height, int size, int threshold, int nbTasks);
 
+// same as masterBlurOnePart but do just 1 iter of blur filter and return the "end" flag
+int masterBlurOnePartOneIter(pixel* inputImg, int width, int height, int size, int threshold, int nbTasks,
+			     int refSize, simpleImage* subImg, pixel* resultImg, pixel* pBuffer);
+
 // apply blur to each image
 void masterBlur(animated_gif* image, int size, int threshold, int nbTasks);
 

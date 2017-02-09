@@ -35,6 +35,9 @@ void slaveBlur(int size, int threshold);
 
 void mergeSubImg(pixel* result, int width, int height, simpleImage bluredImg, int size);
 
+void killSlaves(int nbTasks);
+
+void masterBlurOnePart(pixel* inputImg, int width, int height, int size, int threshold, int nbTasks);
 
 // apply blur to each image
 void masterBlur(animated_gif* image, int size, int threshold, int nbTasks);

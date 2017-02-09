@@ -50,7 +50,7 @@ int main_mpi_blur_filter(int argc, char** argv)
 	//printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
 	printf("L %lf\n", duration); // added by Francois
 
-//**************************************************
+        //**************************************************
 
 	/* FILTER Timer start */
 	gettimeofday(&t1, NULL);
@@ -65,7 +65,7 @@ int main_mpi_blur_filter(int argc, char** argv)
 
 	printf("G %lf\n", duration); // added by Francois
 
-//**************************************************
+        //**************************************************
 
 	/* FILTER Timer start */
 	gettimeofday(&t1, NULL);
@@ -81,7 +81,7 @@ int main_mpi_blur_filter(int argc, char** argv)
 
 	printf("B %lf\n", duration); // added by Francois
 
-//**************************************************
+        //**************************************************
 
 	/* FILTER Timer start */
 	gettimeofday(&t1, NULL);
@@ -121,6 +121,18 @@ int main_mpi_blur_filter(int argc, char** argv)
     return 0;
 }
 
+
+void killSlaves(int nbTasks)
+{
+    int iTask;
+    for(iTask = 0; iTask < nbTasks; iTask++)
+    {
+	if(iTask != ROOT)
+	{
+	    MPI_Send(NULL,0,MPI_BYTE,iTask,0,MPI_COMM_WORLD);
+	}
+    }
+}
 
 
 simpleImage* getNextSubImg(pixel* inputImg, int width, int height, int overlapSize, int refSize, int reset, pixel* pBuffer)
@@ -232,9 +244,9 @@ int blurOneIter(simpleImage* inputImg, int size, int threshold)
 	}
     }
 
-    for(x = 1; x < height-1; x++)
+    for(x = size; x < height-size; x++)
     {
-	for(y = 1; y < width-1; y++)
+	for(y = size; y < width-size; y++)
 	{
 	    float diffR, diffG, diffB;
 
@@ -306,13 +318,13 @@ void slaveBlur(int size, int threshold)
 	MPI_Recv(myImg.p, sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD, NULL);
 	// simpleImage got
 
-/**************************************************/
+        /**************************************************/
 
 	// apply blur
 	blurEnd = blurOneIter(&myImg, size, threshold);
 
 
-/**************************************************/
+        /**************************************************/
 	// send simpleImage
 	MPI_Send(&myImg, sizeof(simpleImage), MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD);
 	MPI_Send(myImg.p, sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD);
@@ -506,13 +518,8 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
     pixel* input = NULL;
 
     // process all images
-    for(i = 0; i < image->n_images; i++)
+    for(i = 0; i < image->n_images; i++) // TODO: unify the blur of 2 parts
     {
-#ifdef DEV_DEBUG
-	printf("Master blur image %d / %d\n", i, image->n_images);
-	fflush(stdout);
-#endif
-
 	width = image->width[i];
 	height = image->height[i];
 
@@ -525,5 +532,7 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
 	masterBlurOnePart(input+(CONV((int)(height*0.9),0,width)), width, height/10, size, threshold, nbTasks);
 	
     }
+
+    killSlaves(nbTasks);
 
 }

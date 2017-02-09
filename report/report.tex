@@ -391,6 +391,7 @@ This work can be done as long as the difference between the input image and the 
 
 The biggest problem of this solution is to split the input image in subparts with a overlap area.
 
+We get the best reduction of time with 8 tasks on the same node than any number of tasks on many node because communications between nodes are much slower than in the same node.
 %end of Kujyto's part
 
 \subsection{OpenMP}

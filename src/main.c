@@ -23,8 +23,7 @@ typedef struct pixel
 } pixel ;
 
 /* Represent one GIF image (animated or not */
-typedef struct animated_gif
-{
+typedef struct animated_gif {
     int n_images ; /* Number of images */
     int * width ; /* Width of each image */
     int * height ; /* Height of each image */

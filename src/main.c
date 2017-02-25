@@ -37,8 +37,7 @@ typedef struct animated_gif
  * structure of type animated_gif.
  */
 animated_gif *
-load_pixels( char * filename ) 
-{
+load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;

@@ -3,6 +3,8 @@ project(Parallel_Image_FIltering)
 
 set(CMAKE_CXX_STANDARD 11)
 
+add_custom_target(mytest COMMAND make -C ${mytest_SOURCE_DIR}
+                         CLION_EXE_DIR=${PROJECT_BINARY_DIR})
 set(SOURCE_FILES
         include/gif_hash.h
         include/gif_lib.h

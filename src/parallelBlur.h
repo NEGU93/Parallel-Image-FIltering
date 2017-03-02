@@ -1,20 +1,12 @@
 #ifndef DEF_PARALLEL_BLUR_H
 #define DEF_PARALLEL_BLUR_H
 
+#include <math.h>
+
 #include "communDef.h"
 
-int splitImage(int inputWidth, int inputHeight, int* heightOffset, int* widthOffset, int* destTopOffset, int* destBottomOffset, int* subWidth, int* subHeight, int overlapSize);
-
-int getSubImage(animated_gif* inputImage, int numImg, simpleImage* destImg, int* heightOffset, int* widthOffset, int myNum);
-
-int fillSubImagesArray(animated_gif* inputImage, int numImg, simpleImage* destImgArray, int* heightOffset, int* widthOffset, int nbSubImg);
-
-int mergeSubImg(pixel* new, int width, pixel* img, int hOBegin, int hOEnd, int wOBegin, int wOEnd, int size);
-
-int one_iter_blur_filter(simpleImage* image, int size, int threshold, int topOffset, int bottomOffset);
-
-void apply_blur_filter_dynamic(animated_gif* img, int size, int threshold);
-
-int main_parallel_blur(int argc, char** argv);
+// fill int[4] output with corner top left and corner bottom right of the img for blur
+// return 0 if no work for task myRank
+int getPart(int height, int width, int size, int myRank, int nbTasks, int* output);
 
 #endif

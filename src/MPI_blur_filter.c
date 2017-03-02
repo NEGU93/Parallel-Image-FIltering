@@ -529,7 +529,7 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
 					   refSize, subImg, resultImg, pBuffer);
 	    
 	    // blur bottom
-	    endPart = masterBlurOnePartOneIter(input+(CONV((int)(height*0.9),0,width)), width, height/10, size, threshold, nbTasks,
+	    endPart = masterBlurOnePartOneIter(input+(CONV((int)(height*0.9),0,width)), width, height - (int)(height*0.9), size, threshold, nbTasks,
 					       refSize, subImg, resultImg, pBuffer);
 	    end = end && endPart;
 	}while(threshold > 0 && !end);

@@ -9,6 +9,8 @@
 
 #define CONV(l,c,nb_c) (l)*(nb_c)+(c)
 
+#define MIN(a,b) ((a < b) ? (a) : (b))
+
 /* Represent one pixel from the image */
 typedef struct pixel
 {

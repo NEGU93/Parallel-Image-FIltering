@@ -1,5 +1,5 @@
-#ifndef DEF_PARALLEL_BLUR_H
-#define DEF_PARALLEL_BLUR_H
+#ifndef DEF_PARALLEL_SPLIT_MPI_H
+#define DEF_PARALLEL_SPLIT_MPI_H
 
 #include <math.h>
 

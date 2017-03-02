@@ -5,6 +5,7 @@
 
 #include <gif_lib.h>
 
+#define ROOT 0
 #define SOBELF_DEBUG 0
 
 #define CONV(l,c,nb_c) (l)*(nb_c)+(c)

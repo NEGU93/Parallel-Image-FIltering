@@ -734,6 +734,7 @@ void apply_sobel_filter( animated_gif * image ) {
 
     p = image->p ;
 
+	
     for ( i = 0 ; i < image->n_images ; i++ ) {
         width = image->width[i] ;
         height = image->height[i] ;
@@ -742,7 +743,10 @@ void apply_sobel_filter( animated_gif * image ) {
 
         sobel = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 
+		#pragma omp parallel firstprivate(j)
+		{
         for(j=1; j<height-1; j++) {
+			#pragma omp for schedule(static) nowait
             for(k=1; k<width-1; k++)  {
                 int pixel_blue_no, pixel_blue_n, pixel_blue_ne;
                 int pixel_blue_so, pixel_blue_s, pixel_blue_se;
@@ -762,7 +766,7 @@ void apply_sobel_filter( animated_gif * image ) {
                 pixel_blue    = p[i][CONV(j  ,k  ,width)].b ;
                 pixel_blue_e  = p[i][CONV(j  ,k+1,width)].b ;
 
-                deltaX_blue = -pixel_blue_no + pixel_blue_ne - 2*pixel_blue_o + 2*pixel_blue_e - pixel_blue_so + pixel_blue_se;             
+                deltaX_blue = -pixel_blue_no + pixel_blue_ne - 2*pixel_blue_o + 2*pixel_blue_e - pixel_blue_so + pixel_blue_se;
 
                 deltaY_blue = pixel_blue_se + 2*pixel_blue_s + pixel_blue_so - pixel_blue_ne - 2*pixel_blue_n - pixel_blue_no;
 
@@ -782,16 +786,16 @@ void apply_sobel_filter( animated_gif * image ) {
         }
 
         for(j=1; j<height-1; j++) {
+			#pragma omp for schedule(static) nowait
             for(k=1; k<width-1; k++) {
                 p[i][CONV(j  ,k  ,width)].r = sobel[CONV(j  ,k  ,width)].r ;
                 p[i][CONV(j  ,k  ,width)].g = sobel[CONV(j  ,k  ,width)].g ;
                 p[i][CONV(j  ,k  ,width)].b = sobel[CONV(j  ,k  ,width)].b ;
             }
         }
-
+		}
         free (sobel) ;
-    }
-
+	}
 }
 
 int main( int argc, char ** argv ) {

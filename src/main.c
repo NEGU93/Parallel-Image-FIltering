@@ -1,7 +1,7 @@
 #include <stdio.h>
 
-#include "MPI_blur_filter.h"
-
+//#include "MPI_blur_filter.h"
+#include "parallelSplitMPI.h"
 
 int main( int argc, char ** argv )
 {
@@ -14,7 +14,7 @@ int main( int argc, char ** argv )
 
     pixel* input = malloc(height * width * sizeof(pixel));
     pixel* pBuf = malloc(height * width * sizeof(pixel));
-    
+
 
     // init input
     printf("Init input...\n");
@@ -69,7 +69,10 @@ int main( int argc, char ** argv )
     // END TEST blurOneIter
     */
 
-    main_mpi_blur_filter(argc, argv);
+    //main_mpi_blur_filter(argc, argv);
+    printf("Test\n");
+
+    mainParallelSplitMPI(argc, argv);
 
     return 0;
 }

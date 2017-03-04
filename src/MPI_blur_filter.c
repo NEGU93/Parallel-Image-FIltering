@@ -15,7 +15,7 @@ int main_mpi_blur_filter(int argc, char** argv)
 	if(argc < 3)
 	{
 	    fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0]);
-	    
+
 #ifdef DEV_DEBUG
 	    fprintf(stderr, "Abort on line %d\n\n", __LINE__);
 #endif
@@ -25,28 +25,28 @@ int main_mpi_blur_filter(int argc, char** argv)
 	}
 
 
-	char * input_filename ; 
+	char * input_filename ;
 	char * output_filename ;
 	animated_gif * image ;
 	struct timeval t1, t2;
 	double duration ;
-	
-	
+
+
 	input_filename = argv[1] ;
 	output_filename = argv[2] ;
-	
+
 	/* IMPORT Timer start */
 	gettimeofday(&t1, NULL);
-	
+
 	/* Load file and store the pixels in array */
 	image = load_pixels( input_filename ) ;
 	if ( image == NULL ) { return 1 ; }
-	
+
 	/* IMPORT Timer stop */
 	gettimeofday(&t2, NULL);
-	
+
 	duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
-	
+
 	//printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
 	printf("L %lf\n", duration); // added by Francois
 
@@ -145,12 +145,12 @@ simpleImage* getNextSubImg(pixel* inputImg, int width, int height, int overlapSi
         x = 0;
         y = 0;
     }
-    
+
     simpleImage* result = NULL;
 
     if(x >= height || refSize <= 2*overlapSize)
         return result;
-    
+
     // assume refSize > 2*overlapSize and x < height
     int h = refSize;
     int w = refSize;
@@ -295,7 +295,7 @@ void slaveBlur(int size, int threshold)
 
 	// get simpleImage
 	MPI_Recv(&myImg, sizeof(simpleImage), MPI_BYTE, ROOT, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
-	
+
 	idImg = s.MPI_TAG;
 	if(idImg == 0)
 	{
@@ -332,7 +332,7 @@ void slaveBlur(int size, int threshold)
 	MPI_Send(myImg.p, sizePixels, MPI_BYTE, ROOT, idImg, MPI_COMM_WORLD);
 	MPI_Send(&blurEnd, 1, MPI_INT, ROOT, idImg, MPI_COMM_WORLD);
 	// simpleImage sent
-	
+
 
 	free(myImg.p);
 	myImg.p = NULL;
@@ -354,7 +354,7 @@ void mergeSubImg(pixel* result, int width, int height, simpleImage bluredImg, in
 	    result[CONV(x+bluredImg.offsetX, y+bluredImg.offsetY, width)].g = p[CONV(x,y,bluredImg.width)].g;
 	    result[CONV(x+bluredImg.offsetX, y+bluredImg.offsetY, width)].b = p[CONV(x,y,bluredImg.width)].b;
 	}
-    } 
+    }
 }
 
 
@@ -376,7 +376,7 @@ int masterBlurOnePartOneIter(pixel* inputImg, int width, int height, int size, i
 	    iTask++;
 	    continue;
 	}
-	    
+
 	subImg = getNextSubImg(inputImg, width, height, size, refSize, (idImg == 1), pBuffer);
 
 	if(subImg == NULL)
@@ -418,7 +418,7 @@ int masterBlurOnePartOneIter(pixel* inputImg, int width, int height, int size, i
 	recvIdImg = s.MPI_TAG;
 	MPI_Recv(recvImg.p, sizePixels, MPI_BYTE, iTask, recvIdImg, MPI_COMM_WORLD, NULL);
 	MPI_Recv(&slaveEnd, 1, MPI_INT, iTask, recvIdImg, MPI_COMM_WORLD, NULL);
-	    
+
 	end = end && slaveEnd;
 
 	nbToWait--;
@@ -466,7 +466,7 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
     if(nbTasks < 2)
     {
 	fprintf(stderr, "Not enough tasks: masterBlur function needs at least 2 tasks\n");
-	
+
 #ifdef DEV_DEBUG
 	fprintf(stderr, "Abort on line %d\n\n", __LINE__);
 #endif
@@ -486,10 +486,10 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
 	height = image->height[i];
 
 	input = image->p[i];
-	
+
 	int refSize = (int)(COEF_REFSIZE * size);
 	int sizePixels;
-        
+
 	simpleImage* subImg = NULL;
 
 	pixel* resultImg = NULL;
@@ -527,7 +527,7 @@ void masterBlur(animated_gif* image, int size, int threshold, int nbTasks)
 	    // blur top
 	    end = masterBlurOnePartOneIter(input, width, height/10, size, threshold, nbTasks,
 					   refSize, subImg, resultImg, pBuffer);
-	    
+
 	    // blur bottom
 	    endPart = masterBlurOnePartOneIter(input+(CONV((int)(height*0.9),0,width)), width, height - (int)(height*0.9), size, threshold, nbTasks,
 					       refSize, subImg, resultImg, pBuffer);

@@ -13,7 +13,7 @@ SRC= dgif_lib.c \
 	gif_hash.c \
 	gifalloc.c \
 	communDef.c \
-	MPI_blur_filter.c \
+	parallelSplitMPI.c \
 	main.c \
 	openbsd-reallocarray.c \
 	quantize.c
@@ -25,7 +25,7 @@ OBJ= $(OBJ_DIR)/dgif_lib.o \
 	$(OBJ_DIR)/gif_hash.o \
 	$(OBJ_DIR)/gifalloc.o \
 	$(OBJ_DIR)/communDef.o \
-	$(OBJ_DIR)/MPI_blur_filter.o \
+	$(OBJ_DIR)/parallelSplitMPI.o \
 	$(OBJ_DIR)/main.o \
 	$(OBJ_DIR)/openbsd-reallocarray.o \
 	$(OBJ_DIR)/quantize.o
@@ -44,4 +44,3 @@ sobelf:$(OBJ)
 clean:
 	rm -f sobelf $(OBJ)
 
-	

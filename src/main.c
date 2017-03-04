@@ -632,13 +632,13 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 
         /* Allocate array of new pixels */
         new = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
-		//#pragma omp parallel firstprivate(new, n_iter, width, height, i, j, k, end, p)
-		//{
+		
         /* Perform at least one blur iteration */
         do {
             end = 1 ;
             n_iter++ ;
-
+			#pragma omp parallel firstprivate(new, n_iter, width, height, i, j, end, p)
+			{
             /* Apply blur on top part of image (10%) */
             for(j=size; j<height/10-size; j++) {
 				#pragma omp for nowait
@@ -674,7 +674,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 
             /* Apply blur on the bottom part of the image (10%) */
             for(j=height*0.9+size; j<height-size; j++)  {
-				#pragma omp for schedule(static) nowait
+				#pragma omp for schedule(static)
                 for(k=size; k < width - size; k++) {
                     int stencil_j, stencil_k ;
                     int t_r = 0 ;
@@ -693,13 +693,14 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
                     new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
                 }
             }
-			#pragma omp barrier
+			}
             for(j=1; j<height-1; j++) {
-				#pragma omp for schedule(static) nowait
+				#pragma omp parallel for firstprivate(p) schedule(static)
+				//#pragma omp for schedule(static)
                 for(k=1; k < width-1; k++) {
-                    float diff_r ;
-                    float diff_g ;
-                    float diff_b ;
+                    float diff_r;
+                    float diff_g;
+                    float diff_b;
 
                     diff_r = (new[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
                     diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
@@ -712,7 +713,6 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
                     p[i][CONV(j  ,k  ,width)].b = new[CONV(j  ,k  ,width)].b ;
                 }
             }
-
         }
         while ( threshold > 0 && !end ) ;
 		//}

@@ -637,7 +637,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
         do {
             end = 1 ;
             n_iter++ ;
-			#pragma omp parallel firstprivate(new, n_iter, width, height, i, j, end, p)
+			#pragma omp parallel firstprivate(new, i, j)
 			{
             /* Apply blur on top part of image (10%) */
             for(j=size; j<height/10-size; j++) {
@@ -693,10 +693,11 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
                     new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
                 }
             }
-			}
+			//}
+			//#pragma omp barrier
             for(j=1; j<height-1; j++) {
-				#pragma omp parallel for firstprivate(p) schedule(static)
-				//#pragma omp for schedule(static)
+				//#pragma omp parallel for firstprivate(p) schedule(static)
+				#pragma omp for schedule(static)
                 for(k=1; k < width-1; k++) {
                     float diff_r;
                     float diff_g;
@@ -706,13 +707,16 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
                     diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
                     diff_b = (new[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
 
-                    if ( diff_r > threshold || -diff_r > threshold || diff_g > threshold || -diff_g > threshold || diff_b > threshold || -diff_b > threshold ) { end = 0; }
+                    if ( diff_r > threshold || -diff_r > threshold || diff_g > threshold || -diff_g > threshold || diff_b > threshold || -diff_b > threshold ) { 
+						end = 0; // Shall I make this atomic?
+					}
 
                     p[i][CONV(j  ,k  ,width)].r = new[CONV(j  ,k  ,width)].r ;
                     p[i][CONV(j  ,k  ,width)].g = new[CONV(j  ,k  ,width)].g ;
                     p[i][CONV(j  ,k  ,width)].b = new[CONV(j  ,k  ,width)].b ;
                 }
             }
+			}
         }
         while ( threshold > 0 && !end ) ;
 		//}

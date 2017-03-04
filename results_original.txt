@@ -1,0 +1,90 @@
+Running test on images/original/051009.vince.gif -> images/processed/051009.vince-sobel.gif
+L 0.042278
+G 0.003044
+B 0.325680
+S 0.022761
+E 0.238331
+Running test on images/original/1.gif -> images/processed/1-sobel.gif
+L 0.039130
+G 0.005703
+B 0.700921
+S 0.039554
+E 0.235443
+Running test on images/original/200_s.gif -> images/processed/200_s-sobel.gif
+L 0.002237
+G 0.000341
+B 0.019064
+S 0.000537
+E 0.002262
+Running test on images/original/9815573.gif -> images/processed/9815573-sobel.gif
+L 0.021109
+G 0.003143
+B 0.155699
+S 0.020659
+E 0.118937
+Running test on images/original/australian-flag-large.gif -> images/processed/australian-flag-large-sobel.gif
+L 0.009455
+G 0.001617
+B 0.194745
+S 0.010648
+E 0.028959
+Running test on images/original/Campusplan-Hausnr.gif -> images/processed/Campusplan-Hausnr-sobel.gif
+L 0.863145
+G 0.155436
+B 21.895478
+S 1.069713
+E 1.219855
+Running test on images/original/Campusplan-Mobilitaetsbeschraenkte.gif -> images/processed/Campusplan-Mobilitaetsbeschraenkte-sobel.gif
+L 0.861805
+G 0.155225
+B 21.914588
+S 1.076668
+E 3.267400
+Running test on images/original/fire.gif -> images/processed/fire-sobel.gif
+L 0.001662
+G 0.000142
+B 0.000568
+S 0.000625
+E 0.003879
+Running test on images/original/frame_002.gif -> images/processed/frame_002-sobel.gif
+L 0.003938
+G 0.000587
+B 0.065767
+S 0.003675
+E 0.006283
+Running test on images/original/giphy-3.gif -> images/processed/giphy-3-sobel.gif
+L 0.180291
+G 0.023163
+B 2.323675
+S 0.171585
+E 1.480990
+Running test on images/original/Mandelbrot-large.gif -> images/processed/Mandelbrot-large-sobel.gif
+L 0.381186
+G 0.059111
+B 3.977888
+S 0.397096
+E 3.775885
+Running test on images/original/porsche.gif -> images/processed/porsche-sobel.gif
+L 0.003069
+G 0.000391
+B 0.010665
+S 0.002496
+E 0.004671
+Running test on images/original/Produits_sous_linux.gif -> images/processed/Produits_sous_linux-sobel.gif
+L 0.020920
+G 0.001737
+B 0.216753
+S 0.011602
+E 0.015689
+Running test on images/original/TimelyHugeGnu.gif -> images/processed/TimelyHugeGnu-sobel.gif
+L 0.075721
+G 0.009804
+B 0.524160
+S 0.066033
+E 0.528113
+Running test on images/original/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large.gif -> images/processed/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large-sobel.gif
+L 0.052988
+G 0.005167
+B 0.391235
+S 0.034944
+E 0.511671

@@ -51,8 +51,8 @@ We will work with GIF image because this formate has the following advantages:
 	\item[$\bullet$] Allow animation (multiple images)
 \end{description}
 
-\subsection{Testing Files}
-To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained.
+\subsection{Testing Work}
+To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
 
 Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
 
@@ -121,7 +121,18 @@ We get the best reduction of time with 8 tasks on the same node than any number 
 %end of Kujyto's part
 
 \subsection{OpenMP}
-\subsection{Treating subparts of each image}
+OpenMP stands for Open Multi-Processing. It is an application programming interface (API) that supports milti-platform shared memory multiprocessing programming in C, C++ and Fortran on most platforms, processor architectures and operating systems.
+OpenMP provides a portable, scalable model for developers of shared memory parallel applications.
+It consist of a set of three primary API components:
+\begin{description}
+	\item[1$\cdot$] Compiler Directives
+	\item[2$\cdot$] Runtime Library Routines
+	\item[3$\cdot$] Environmental Variables
+\end{description}
+
+OpenMP comes included in gcc compiler so that only a flag is needed for gcc to compile the Parallel code made with OpenMP.
+
+\subsubsection{Treating subparts of each image}
 As in \ref{sec:treating_subparts}, the goal of this part was to implement a program that divides the image into sections and each thread treats each section. The approach was different than on the MPI implementation. Here, it was not the main which was treated but every specific filter function.
 
 \subsubsection{Results}

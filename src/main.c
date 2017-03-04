@@ -231,7 +231,6 @@ int output_modified_read_gif( char * filename, GifFileType * g ) {
     return 1 ;
 }
 
-
 int store_pixels( char * filename, animated_gif * image ) {
     int n_colors = 0 ;
     pixel ** p ;

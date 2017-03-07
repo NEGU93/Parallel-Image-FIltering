@@ -1,12 +1,10 @@
 #include "parallelSplitMPI.h"
 
+int myRank;
+
 int mainParallelSplitMPI(int argc, char** argv)
 {
-    printf("Test1\n");
-    MPI_Init(&argc, &argv);
-    printf("Test2\n");
-
-    int myRank;
+//    int myRank;
     MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
 
     if(argc < 3)
@@ -18,8 +16,6 @@ int mainParallelSplitMPI(int argc, char** argv)
         fflush(stderr);
         MPI_Abort(MPI_COMM_WORLD, 1);
     }
-
-    return 0; // DEBUG
 
     char* input_filename;
     char* output_filename;
@@ -108,17 +104,16 @@ int mainParallelSplitMPI(int argc, char** argv)
         printf("E %lf\n", duration);
     }
 
-    MPI_Finalize();
-
     return 0;
 }
-
 
 // size of N tiles in h*w
 void getTileSize(int h, int w, int N, int* size)
 {
-    int nbX = (int)sqrt(N * w / h);
+    int nbX = (int)sqrt(N * h / w);
+    nbX = (nbX > 0) ? nbX : 1;
     int nbY = N / nbX;
+    nbY = (nbY > 0) ? nbY : 1;
 
     size[0] = h / nbX;
     size[1] = w / nbY;
@@ -132,7 +127,8 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
     int stripeWidth = width - (2 * size);
 
     int tileSize[2];
-    getTileSize(stripeHeight, stripeWidth, groupSize, tileSize);
+    int adjustedSize = groupSize + ((nbTasks % 2 != 0 && myRank >= groupSize) ? 1 : 0);
+    getTileSize(stripeHeight, stripeWidth, adjustedSize, tileSize);
 
     int nbX = stripeHeight / tileSize[0];
     int nbY = stripeWidth / tileSize[1];
@@ -215,7 +211,7 @@ void copyImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offse
     }
 }
 
-void writeImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offsetY, int height, int width)
+void writeImg(pixel* input, pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width)
 {
     int i,j;
 
@@ -223,15 +219,19 @@ void writeImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offs
     {
         for(j = 0; j < width; j++)
         {
-            output[CONV(offsetX + i, offsetY + j, width)].r = input[CONV(i, j, inputWidth)].r;
-            output[CONV(offsetX + i, offsetY + j, width)].g = input[CONV(i, j, inputWidth)].g;
-            output[CONV(offsetX + i, offsetY + j, width)].b = input[CONV(i, j, inputWidth)].b;
+            output[CONV(offsetX + i, offsetY + j, outputWidth)].r = input[CONV(i, j, width)].r;
+            output[CONV(offsetX + i, offsetY + j, outputWidth)].g = input[CONV(i, j, width)].g;
+            output[CONV(offsetX + i, offsetY + j, outputWidth)].b = input[CONV(i, j, width)].b;
         }
     }
 }
 
-void send(pixel* input, int inputWidth, int offsetX, int offsetY, int height, int width, int targetRank)
+#if 1
+void mon_send(pixel* input, int inputWidth, int offsetX, int offsetY, int height, int width, int targetRank)
 {
+    //printf("%d : send to %d\n", myRank, targetRank); // debug
+    //fflush(stdout);
+
     pixel* buffer;
     int size = height * width * sizeof(pixel);
     buffer = (pixel*)malloc(size);
@@ -245,8 +245,11 @@ void send(pixel* input, int inputWidth, int offsetX, int offsetY, int height, in
     free(buffer);
 }
 
-void recv(pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width, int sourceRank)
+void mon_recv(pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width, int sourceRank)
 {
+    //printf("%d : recv from %d\n", myRank, sourceRank); // debug
+    //fflush(stdout);
+
     pixel* buffer;
     int size = height * width * sizeof(pixel);
     buffer = (pixel*)malloc(size);
@@ -256,9 +259,228 @@ void recv(pixel* output, int outputWidth, int offsetX, int offsetY, int height, 
     MPI_Recv(buffer, size, MPI_BYTE, sourceRank, 0, MPI_COMM_WORLD, &s);
 
     // write in output
-    writeImg(buffer, output, width, offsetX, offsetY, height, outputWidth);
+    writeImg(buffer, output, outputWidth, offsetX, offsetY, height, width);
 
     free(buffer);
+}
+
+void sendRecvOverlaps(pixel* myImg, int myRank, int* myDimRank, int* myDimGroup, int myHeight, int myWidth, int size)
+{
+// recv overlaps area from left, top left, top, top right
+    if(myDimRank[0] > 0)
+    {
+	if(myDimRank[1] > 0)
+	{
+	    // from top left
+	    mon_recv(myImg, myWidth,
+		     0, 0,
+		     size, size,
+		     myRank - myDimGroup[1] -1);
+	}
+
+	// from top
+	mon_recv(myImg, myWidth,
+		 0, size,
+		 size, myWidth - 2*size,
+		 myRank - myDimGroup[1]);
+
+	if(myDimRank[1] < myDimGroup[1] - 1)
+	{
+	    // from top right
+	    mon_recv(myImg, myWidth,
+		     0, myWidth - size,
+		     size, size,
+		     myRank - myDimGroup[1] + 1);
+	}
+    }
+
+    if(myDimRank[1] > 0)
+    {
+	// from left
+	mon_recv(myImg, myWidth,
+		 size, 0,
+		 myHeight - 2*size, size,
+		 myRank - 1);
+    }
+
+    /******************************/
+
+    // send overlaps area to all neighbors
+    if(myDimRank[0] > 0)
+    {
+	if(myDimRank[1] > 0)
+	{
+	    // to top left
+	    mon_send(myImg, myWidth,
+		     size, size,
+		     size, size,
+		     myRank - myDimGroup[1] - 1);
+	}
+
+	// to top
+	mon_send(myImg, myWidth,
+		 size, size,
+		 size, myWidth - 2*size,
+		 myRank - myDimGroup[1]);
+
+	if(myDimRank[1] < myDimGroup[1] - 1)
+	{
+	    // to top right
+	    mon_send(myImg, myWidth,
+		     size, myWidth - 2*size,
+		     size, size,
+		     myRank - myDimGroup[1] + 1);
+	}
+    }
+
+    if(myDimRank[1] > 0)
+    {
+	// to left
+	mon_send(myImg, myWidth,
+		 size, size,
+		 myHeight - 2*size, size,
+		 myRank - 1);
+    }
+
+    if(myDimRank[1] < myDimGroup[1] - 1)
+    {
+	// to right
+	mon_send(myImg, myWidth,
+		 size, myWidth - 2*size,
+		 myHeight - 2*size, size,
+		 myRank + 1);
+    }
+
+    if(myDimRank[0] < myDimGroup[0] - 1)
+    {
+	if(myDimRank[1] > 0)
+	{
+	    // to bottom left
+	    mon_send(myImg, myWidth,
+		     myHeight - 2*size, size,
+		     size, size,
+		     myRank + myDimGroup[1] - 1);
+	}
+
+	// to bottom
+	mon_send(myImg, myWidth,
+		 myHeight - 2*size, size,
+		 size, myWidth - 2*size,
+		 myRank + myDimGroup[1]);
+
+	if(myDimRank[1] < myDimGroup[1] - 1)
+	{
+	    // to bottom right
+	    mon_send(myImg, myWidth,
+		     myHeight - 2*size, myWidth - 2*size,
+		     size, size,
+		     myRank + myDimGroup[1] + 1);
+	}
+    }
+
+    /******************************/
+
+    // recv overlaps area from right, bottom left, bottom, bottom right
+    if(myDimRank[0] < myDimGroup[0] - 1)
+    {
+	if(myDimRank[1] > 0)
+	{
+	    // from bottom left
+	    mon_recv(myImg, myWidth,
+		     myHeight - size, 0,
+		     size, size,
+		     myRank + myDimGroup[1] -1);
+	}
+
+	// from bottom
+	mon_recv(myImg, myWidth,
+		 myHeight - size, size,
+		 size, myWidth - 2*size,
+		 myRank + myDimGroup[1]);
+
+	if(myDimRank[1] < myDimGroup[1] - 1)
+	{
+	    // from bottom right
+	    mon_recv(myImg, myWidth,
+		     myHeight - size, myWidth - size,
+		     size, size,
+		     myRank + myDimGroup[1] + 1);
+	}
+    }
+
+    if(myDimRank[1] < myDimGroup[1] - 1)
+    {
+	// from right
+	mon_recv(myImg, myWidth,
+		 size, myWidth - size,
+		 myHeight - 2*size, size,
+		 myRank + 1);
+    }
+}
+
+void updateImg(pixel* p, int pHeight, int pWidth, pixel* myImg, int myRank, int nbTasks, int* shape, int size)
+{
+    if(myRank == ROOT)
+    {
+	int nbToWait;
+	int srcTask;
+	int srcTag;
+	MPI_Status s;
+	int extractHeight;
+	int extractWidth;
+	pixel* buffer;
+
+	buffer = (pixel*)malloc(pHeight * pWidth * sizeof(pixel));
+
+	// write root part
+	extractHeight = shape[2] - shape[0];
+	extractWidth = shape[3] - shape[1];
+	copyImg(myImg, buffer, extractWidth + 2*size, size, size, extractHeight, extractWidth);
+	writeImg(buffer, p, pWidth, shape[0], shape[1], shape[2] - shape[0], shape[3] - shape[1]);
+
+	// get other tasks part
+	for(nbToWait = nbTasks - 1; nbToWait > 0; nbToWait--) // each task sends to root
+	{
+	    MPI_Recv(shape, 4, MPI_INT, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &s);
+
+	    if(shape[0] < 0) // no work task
+	    {
+		continue;
+	    }
+
+	    srcTask = s.MPI_SOURCE;
+	    srcTag = s.MPI_TAG;
+
+	    //printf("Get from %d\n", srcTask); // debug
+	    //fflush(stdout);
+
+	    extractHeight = shape[2] - shape[0];
+	    extractWidth = shape[3] - shape[1];
+
+	    MPI_Recv(buffer, extractHeight * extractWidth * sizeof(pixel), MPI_BYTE, srcTask, srcTag+1, MPI_COMM_WORLD, &s);
+	    writeImg(buffer, p, pWidth, shape[0], shape[1], extractHeight, extractWidth);
+	}
+
+	free(buffer);
+    }
+    else if(shape[0] >= 0)
+    {
+	//printf("%d -> send to %d\n", myRank, ROOT); // debug
+	//fflush(stdout);
+
+	int extractHeight = shape[2] - shape[0];
+	int extractWidth = shape[3] - shape[1];
+	int sizeBuf = extractHeight * extractWidth * sizeof(pixel);
+	pixel* buffer = (pixel*)malloc(sizeBuf);
+	copyImg(myImg, buffer, extractWidth + 2*size, size, size, extractHeight, extractWidth);
+
+	MPI_Send(shape, 4, MPI_INT, ROOT, myRank, MPI_COMM_WORLD);
+	MPI_Send(buffer, sizeBuf, MPI_BYTE, ROOT, myRank+1, MPI_COMM_WORLD);
+    }
+    else
+    {
+	MPI_Send(shape, 4, MPI_INT, ROOT, myRank, MPI_COMM_WORLD);
+    }
 }
 
 void blurFilter(animated_gif* image, int size, int threshold)
@@ -294,6 +516,10 @@ void blurFilter(animated_gif* image, int size, int threshold)
 
         if(getPartBlur(height, width, size, myRank, nbTasks, shape, myDimRank, myDimGroup))
         {
+//	    printf("%d : (x,y) -> (%d/%d,%d/%d)\n", myRank, myDimRank[0], myDimGroup[0], myDimRank[1], myDimGroup[1]); // debug
+//	    printf("shape %d : [%d,%d,%d,%d]\n", myRank, shape[0], shape[1], shape[2], shape[3]);
+//	    fflush(stdout);
+
             myHeight = shape[2] - shape[0] + 2*size;
             myWidth = shape[3] - shape[1] + 2*size;
             // allocate array of pixels (with overlaps)
@@ -310,160 +536,8 @@ void blurFilter(animated_gif* image, int size, int threshold)
                 end = 1;
                 n_iter++;
 
-                /******************************/
+                sendRecvOverlaps(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
 
-                // recv overlaps area from left, top left, top, top right
-                if(myDimRank[0] > 0)
-                {
-                    if(myDimRank[1] > 0)
-                    {
-                        // from top left
-                        recv(myImg, myWidth,
-                             0, 0,
-                             size, size,
-                             myRank - myDimGroup[1] -1);
-                    }
-
-                    // from top
-                    recv(myImg, myWidth,
-                         0, size,
-                         size, myWidth - 2*size,
-                         myRank - myDimGroup[1]);
-
-                    if(myDimRank[1] < myDimGroup[1] - 1)
-                    {
-                        // from top right
-                        recv(myImg, myWidth,
-                             0, myWidth - size,
-                             size, size,
-                             myRank - myDimGroup[1] + 1);
-                    }
-                }
-
-                if(myDimRank[1] > 0)
-                {
-                    // from left
-                    recv(myImg, myWidth,
-                         size, 0,
-                         myHeight - 2*size, size,
-                         myRank - 1);
-                }
-
-                /******************************/
-
-                // send overlaps area to all neighbors
-                if(myDimRank[0] > 0)
-                {
-                    if(myDimRank[1] > 0)
-                    {
-                        // to top left
-                        send(myImg, myWidth,
-                             size, size,
-                             size, size,
-                             myRank - myDimGroup[1] - 1);
-                    }
-
-                    // to top
-                    send(myImg, myWidth,
-                         size, size,
-                         size, myWidth - 2*size,
-                         myRank - myDimGroup[1]);
-
-                    if(myDimRank[1] < myDimGroup[1] - 1)
-                    {
-                        // to top right
-                        send(myImg, myWidth,
-                             size, myWidth - 2*size,
-                             size, size,
-                             myRank - myDimGroup[1] + 1);
-                    }
-                }
-
-                if(myDimRank[1] > 0)
-                {
-                    // to left
-                    send(myImg, myWidth,
-                         size, size,
-                         myHeight - 2*size, size,
-                         myRank - 1);
-                }
-
-                if(myDimRank[1] < myDimGroup[1] - 1)
-                {
-                    // to right
-                    send(myImg, myWidth,
-                         size, myWidth - 2*size,
-                         myHeight - 2*size, size,
-                         myRank + 1);
-                }
-
-                if(myDimRank[0] < myDimGroup[0] - 1)
-                {
-                    if(myDimRank[1] > 0)
-                    {
-                        // to bottom left
-                        send(myImg, myWidth,
-                             myHeight - 2*size, size,
-                             size, size,
-                             myRank + myDimGroup[1] - 1);
-                    }
-
-                    // to bottom
-                    send(myImg, myWidth,
-                         myHeight - 2*size, size,
-                         size, myWidth - 2*size,
-                         myRank + myDimGroup[1]);
-
-                    if(myDimRank[1] < myDimGroup[1] - 1)
-                    {
-                        // to bottom right
-                        send(myImg, myWidth,
-                             myHeight - 2*size, myWidth - 2*size,
-                             size, size,
-                             myRank + myDimGroup[1] + 1);
-                    }
-                }
-
-                /******************************/
-
-                // recv overlaps area from right, bottom left, bottom, bottom right
-                if(myDimRank[0] < myDimGroup[0] - 1)
-                {
-                    if(myDimRank[1] > 0)
-                    {
-                        // from bottom left
-                        recv(myImg, myWidth,
-                             myHeight - size, 0,
-                             size, size,
-                             myRank + myDimGroup[1] -1);
-                    }
-
-                    // from bottom
-                    recv(myImg, myWidth,
-                         myHeight - size, size,
-                         size, myWidth - 2*size,
-                         myRank + myDimGroup[1]);
-
-                    if(myDimRank[1] < myDimGroup[1] - 1)
-                    {
-                        // from bottom right
-                        recv(myImg, myWidth,
-                             myHeight - size, myWidth - size,
-                             size, size,
-                             myRank + myDimGroup[1] + 1);
-                    }
-                }
-
-                if(myDimRank[1] < myDimGroup[1] - 1)
-                {
-                    // from right
-                    recv(myImg, myWidth,
-                         size, myWidth - size,
-                         myHeight - 2*size, size,
-                         myRank + 1);
-                }
-
-                /************************************************************/
 
                 // apply blur
                 for(j = size; j < myHeight - size; j++)
@@ -520,10 +594,13 @@ void blurFilter(animated_gif* image, int size, int threshold)
                 }
 
                 int endReduce;
-                MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
+                MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_MIN, MPI_COMM_WORLD);
                 end = endReduce;
 
             } while(threshold > 0 && !end);
+
+	    // TODO: write new image in root
+	    updateImg(p[i], height, width, myImg, myRank, nbTasks, shape, size);
 
             free(myImg);
             free(new);
@@ -538,6 +615,10 @@ void blurFilter(animated_gif* image, int size, int threshold)
                 MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_LAND, MPI_COMM_WORLD);
                 end = endReduce;
             } while(threshold > 0 && !end);
+
+	    shape[0] = shape[1] = shape[2] = shape[3] = -1;
+	    updateImg(NULL, 0, 0, NULL, myRank, nbTasks, shape, size);
         }
     }
 }
+#endif

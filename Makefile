@@ -6,7 +6,8 @@ CC=mpicc
 CFLAGS=-O3 -I$(HEADER_DIR)
 LDFLAGS=-lm
 
-SRC= dgif_lib.c \
+SRC= 	main.c \
+	dgif_lib.c \
 	egif_lib.c \
 	gif_err.c \
 	gif_font.c \
@@ -14,11 +15,11 @@ SRC= dgif_lib.c \
 	gifalloc.c \
 	communDef.c \
 	parallelSplitMPI.c \
-	main.c \
 	openbsd-reallocarray.c \
 	quantize.c
 
-OBJ= $(OBJ_DIR)/dgif_lib.o \
+OBJ= 	$(OBJ_DIR)/main.o \
+	$(OBJ_DIR)/dgif_lib.o \
 	$(OBJ_DIR)/egif_lib.o \
 	$(OBJ_DIR)/gif_err.o \
 	$(OBJ_DIR)/gif_font.o \
@@ -26,7 +27,6 @@ OBJ= $(OBJ_DIR)/dgif_lib.o \
 	$(OBJ_DIR)/gifalloc.o \
 	$(OBJ_DIR)/communDef.o \
 	$(OBJ_DIR)/parallelSplitMPI.o \
-	$(OBJ_DIR)/main.o \
 	$(OBJ_DIR)/openbsd-reallocarray.o \
 	$(OBJ_DIR)/quantize.o
 

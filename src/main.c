@@ -5,6 +5,8 @@
 
 int main( int argc, char ** argv )
 {
+    MPI_Init(&argc, &argv);
+
     /*
     // TEST getNextSubImg
     int height = 10;
@@ -70,9 +72,10 @@ int main( int argc, char ** argv )
     */
 
     //main_mpi_blur_filter(argc, argv);
-    printf("Test\n");
 
     mainParallelSplitMPI(argc, argv);
+
+    MPI_Finalize();
 
     return 0;
 }

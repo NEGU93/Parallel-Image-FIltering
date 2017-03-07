@@ -1,7 +1,7 @@
 N=16
 75 inputs
-Load time : 2.832118
-Gray filter time : 0.754993
-Blur filter time : 110.352629
-Sobel filter time : 3.845868
-Export time : 12.922492
+Load time : 3.381443
+Gray filter time : 1.773759
+Blur filter time : 4.255167
+Sobel filter time : 3.038188
+Export time : 10.277107

@@ -13,6 +13,7 @@
 
 #define CONV(l,c,nb_c) (l)*(nb_c)+(c)
 
+#define MAX(a,b) ((a > b) ? (a) : (b))
 #define MIN(a,b) ((a < b) ? (a) : (b))
 
 /* Represent one pixel from the image */

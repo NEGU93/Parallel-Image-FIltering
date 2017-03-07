@@ -108,15 +108,23 @@ int mainParallelSplitMPI(int argc, char** argv)
 }
 
 // size of N tiles in h*w
-void getTileSize(int h, int w, int N, int* size)
+void getDimSize(int h, int w, int N, int size, int* dim)
 {
+    int maxX = MAX(h / size,1);
+    int maxY = MAX(w / size,1);
+
     int nbX = (int)sqrt(N * h / w);
     nbX = (nbX > 0) ? nbX : 1;
+    nbX = MIN(nbX,maxX);
     int nbY = N / nbX;
     nbY = (nbY > 0) ? nbY : 1;
+    nbY = MIN(nbY,maxY);
 
-    size[0] = h / nbX;
-    size[1] = w / nbY;
+    //printf("Dim %d -> %d,%d\n", myRank, nbX,nbY); // debug
+    //fflush(stdout);
+
+    dim[0] = nbX;
+    dim[1] = nbY;
 }
 
 int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* output, int* rank2dim, int* groupDim)
@@ -126,12 +134,22 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
     int stripeHeight = height / 10 - size;
     int stripeWidth = width - (2 * size);
 
-    int tileSize[2];
-    int adjustedSize = groupSize + ((nbTasks % 2 != 0 && myRank >= groupSize) ? 1 : 0);
-    getTileSize(stripeHeight, stripeWidth, adjustedSize, tileSize);
+    int dimSize[2];
+    int adjustedSize = groupSize + ((nbTasks % 2 != 0 && myRank >= groupSize) ? 1 : 0); // add one to bottom group if odd number of tasks
+    getDimSize(stripeHeight, stripeWidth, adjustedSize, size, dimSize);
 
+/* old version
     int nbX = stripeHeight / tileSize[0];
     int nbY = stripeWidth / tileSize[1];
+    int nbOverX = stripeHeight % tileSize[0];
+    int nbOverY = stripeWidth % tileSize[1];
+*/
+    int nbX = dimSize[0];
+    int nbY = dimSize[1];
+
+    int tileSize[2];
+    tileSize[0] = stripeHeight / nbX;
+    tileSize[1] = stripeWidth / nbY;
     int nbOverX = stripeHeight % tileSize[0];
     int nbOverY = stripeWidth % tileSize[1];
 
@@ -165,6 +183,7 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
     return 1;
 }
 
+/*
 int getPartGlobal(int height, int width, int myRank, int nbTasks, int* output, int* rank2dim, int* groupDim)
 {
     int tileSize[2];
@@ -195,6 +214,7 @@ int getPartGlobal(int height, int width, int myRank, int nbTasks, int* output, i
 
     return 1;
 }
+*/
 
 void copyImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offsetY, int height, int width)
 {
@@ -518,7 +538,7 @@ void blurFilter(animated_gif* image, int size, int threshold)
         {
 //	    printf("%d : (x,y) -> (%d/%d,%d/%d)\n", myRank, myDimRank[0], myDimGroup[0], myDimRank[1], myDimGroup[1]); // debug
 //	    printf("shape %d : [%d,%d,%d,%d]\n", myRank, shape[0], shape[1], shape[2], shape[3]);
-//	    fflush(stdout);
+	    fflush(stdout);
 
             myHeight = shape[2] - shape[0] + 2*size;
             myWidth = shape[3] - shape[1] + 2*size;
@@ -536,7 +556,10 @@ void blurFilter(animated_gif* image, int size, int threshold)
                 end = 1;
                 n_iter++;
 
-                sendRecvOverlaps(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
+		if(n_iter > 0)
+		{
+		    sendRecvOverlaps(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
+		}
 
 
                 // apply blur

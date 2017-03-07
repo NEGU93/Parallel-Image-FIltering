@@ -20,6 +20,9 @@
 
 #define SOBELF_DEBUG 0
 
+#define CONV(l,c,nb_c) \
+    (l)*(nb_c)+(c)
+
 /* Represent one pixel from the image */
 typedef struct pixel {
     int r ; /* Red */
@@ -37,6 +40,84 @@ typedef struct animated_gif {
                          DO NOT MODIFY */
 } animated_gif ;
 
+__global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p, pixel * newp) {
+	int j, k;
+	int row = blockIdx.y + blockDim.y + threadIdx.y;
+	int	col = blockIdx.x + blockDim.x + threadIdx.x;
+	for (j = row + size; j < height / 10 - size; j += (blockIdx.y + blockDim.y) ) {
+		for (k = col + size; k < width - size; k += (blockIdx.x + blockDim.x)) {
+			int stencil_j, stencil_k;
+			int t_r = 0;
+			int t_g = 0;
+			int t_b = 0;
+
+			for (stencil_j = -size; stencil_j <= size; stencil_j++) {
+				for (stencil_k = -size; stencil_k <= size; stencil_k++) {
+					t_r += p[CONV(j + stencil_j, k + stencil_k, width)].r;
+					t_g += p[CONV(j + stencil_j, k + stencil_k, width)].g;
+					t_b += p[CONV(j + stencil_j, k + stencil_k, width)].b;
+				}
+			}
+
+			newp[CONV(j, k, width)].r = t_r / ((2 * size + 1)*(2 * size + 1));
+			newp[CONV(j, k, width)].g = t_g / ((2 * size + 1)*(2 * size + 1));
+			newp[CONV(j, k, width)].b = t_b / ((2 * size + 1)*(2 * size + 1));
+		}
+	}
+}
+
+/* Cuda inits */
+void alloc_device_pixel_array(int w, int h, pixel **p) {
+	cudaError_t err = cudaMalloc(p, w * h * sizeof(pixel));
+	if (err != cudaSuccess) { 
+		fprintf(stderr, "%s failed to alloc\n", __FUNCTION__); 
+		abort(); 
+	}
+}
+void transfer_pixel_array_H2D(int N, pixel *p, pixel *d_p) {
+	cudaError_t err = cudaMemcpy(d_p, p, N * sizeof(pixel), cudaMemcpyHostToDevice);
+	if (err != cudaSuccess) { 
+		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__); 
+		abort(); 
+	}
+}
+void transfer_pixel_array_D2H(int N, pixel *p, pixel *d_p) {
+	cudaError_t err = cudaMemcpy(p, d_p, N * sizeof(pixel), cudaMemcpyDeviceToHost);
+	if (err != cudaSuccess) { 
+		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__); 
+		abort(); 
+	}
+}
+
+void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
+	pixel * d_p;
+	pixel * d_new;
+	dim3 gridDim(2);
+	dim3 blockDim(8, 8);
+
+	/* Alloc everything in device */
+	//alloc_device_pixel_array(width, height, &d_p);
+	cudaError_t err = cudaMalloc((void **)&d_p, width * height * sizeof(pixel));
+	if (err != cudaSuccess) {
+		fprintf(stderr, "%s failed to alloc\n", __FUNCTION__);
+		abort();
+	}
+	alloc_device_pixel_array(width, height, &d_new);
+	
+	/* Copy to memory */
+	//transfer_pixel_array_H2D(width*height, p, d_p);
+	//fprintf(stdout, "%d", d_p->r);
+	err = cudaMemcpy(d_p, p, width * height * sizeof(pixel), cudaMemcpyHostToDevice);
+	if (err != cudaSuccess) {
+		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__);
+		abort();
+	}
+
+	/* Call Kernel */
+	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
+
+	transfer_pixel_array_D2H(width*height, d_new, newp);
+}
 /*
  * Load a GIF image from a file and return a
  * structure of type animated_gif.
@@ -72,24 +153,21 @@ animated_gif * load_pixels( char * filename ) {
     n_images = g->ImageCount ;
 
     width = (int *)malloc( n_images * sizeof( int ) ) ;
-    if ( width == NULL )
-    {
+    if ( width == NULL ) {
         fprintf( stderr, "Unable to allocate width of size %d\n",
                 n_images ) ;
         return 0 ;
     }
 
     height = (int *)malloc( n_images * sizeof( int ) ) ;
-    if ( height == NULL )
-    {
+    if ( height == NULL ) {
         fprintf( stderr, "Unable to allocate height of size %d\n",
                 n_images ) ;
         return 0 ;
     }
 
     /* Fill the width and height */
-    for ( i = 0 ; i < n_images ; i++ ) 
-    {
+    for ( i = 0 ; i < n_images ; i++ ) {
         width[i] = g->SavedImages[i].ImageDesc.Width ;
         height[i] = g->SavedImages[i].ImageDesc.Height ;
 
@@ -109,8 +187,7 @@ animated_gif * load_pixels( char * filename ) {
 
     /* Get the global colormap */
     colmap = g->SColorMap ;
-    if ( colmap == NULL ) 
-    {
+    if ( colmap == NULL ) {
         fprintf( stderr, "Error global colormap is NULL\n" ) ;
         return NULL ;
     }
@@ -125,20 +202,16 @@ animated_gif * load_pixels( char * filename ) {
 
     /* Allocate the array of pixels to be returned */
     p = (pixel **)malloc( n_images * sizeof( pixel * ) ) ;
-    if ( p == NULL )
-    {
+    if ( p == NULL ) {
         fprintf( stderr, "Unable to allocate array of %d images\n",
                 n_images ) ;
         return NULL ;
     }
 
-    for ( i = 0 ; i < n_images ; i++ ) 
-    {
+    for ( i = 0 ; i < n_images ; i++ ) {
         p[i] = (pixel *)malloc( width[i] * height[i] * sizeof( pixel ) ) ;
-        if ( p[i] == NULL )
-        {
-        fprintf( stderr, "Unable to allocate %d-th array of %d pixels\n",
-                i, width[i] * height[i] ) ;
+        if ( p[i] == NULL ) {
+        fprintf( stderr, "Unable to allocate %d-th array of %d pixels\n", i, width[i] * height[i] ) ;
         return NULL ;
         }
     }
@@ -146,13 +219,11 @@ animated_gif * load_pixels( char * filename ) {
     /* Fill pixels */
 
     /* For each image */
-    for ( i = 0 ; i < n_images ; i++ )
-    {
+    for ( i = 0 ; i < n_images ; i++ ) {
         int j ;
 
         /* Get the local colormap if needed */
-        if ( g->SavedImages[i].ImageDesc.ColorMap )
-        {
+        if ( g->SavedImages[i].ImageDesc.ColorMap ) {
 
             /* TODO No support for local color map */
             fprintf( stderr, "Error: application does not support local colormap\n" ) ;
@@ -162,8 +233,7 @@ animated_gif * load_pixels( char * filename ) {
         }
 
         /* Traverse the image and fill pixels */
-        for ( j = 0 ; j < width[i] * height[i] ; j++ ) 
-        {
+        for ( j = 0 ; j < width[i] * height[i] ; j++ ) {
             int c ;
 
             c = g->SavedImages[i].RasterBits[j] ;
@@ -594,9 +664,6 @@ void apply_gray_filter( animated_gif * image ) {
     }
 }
 
-#define CONV(l,c,nb_c) \
-    (l)*(nb_c)+(c)
-
 void apply_gray_line( animated_gif * image ) {
     int i, j, k ;
     pixel ** p ;
@@ -622,13 +689,10 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int width, height ;
     int end = 0 ;
     int n_iter = 0 ;
-
     pixel ** p ;
     pixel * newp ;
-
     /* Get the pixels of all images */
     p = image->p ;
-
 
     /* Process all images */
     for ( i = 0 ; i < image->n_images ; i++ ) {
@@ -645,26 +709,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
             n_iter++ ;
 
             /* Apply blur on top part of image (10%) */
-            for(j=size; j<height/10-size; j++) {
-                for(k=size; k<width-size; k++) {
-                    int stencil_j, stencil_k ;
-                    int t_r = 0 ;
-                    int t_g = 0 ;
-                    int t_b = 0 ;
-
-                    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ ) {
-                        for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ ) {
-                            t_r += p[i][CONV(j+stencil_j,k+stencil_k,width)].r ;
-                            t_g += p[i][CONV(j+stencil_j,k+stencil_k,width)].g ;
-                            t_b += p[i][CONV(j+stencil_j,k+stencil_k,width)].b ;
-                        }
-                    }
-
-                    newp[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-                    newp[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-                    newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
-                }
-            }
+			apply_blur_top(height, width, size, p[i], newp);
 
             /* Copy the middle part of the image */
             for(j=height/10-size; j<height*0.9+size; j++) {
@@ -696,8 +741,8 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
                 }
             }
 
-            for(j=1; j<height-1; j++) {
-                for(k=1; k<width-1; k++) {
+            for(j = size; j < height - size; j++) {
+                for(k = size; k < width - size; k++) {
                     float diff_r ;
                     float diff_g ;
                     float diff_b ;

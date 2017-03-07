@@ -11,6 +11,9 @@
 
 #include <gif_lib.h>
 
+#include <cuda_runtime.h>
+#include <cuda.h>
+
 #define SOBELF_DEBUG 0
 
 /* Represent one pixel from the image */
@@ -24,11 +27,11 @@ typedef struct pixel
 /* Represent one GIF image (animated or not */
 typedef struct animated_gif
 {
-    int n_images ; /* Number of images */
-    int * width ; /* Width of each image */
-    int * height ; /* Height of each image */
-    pixel ** p ; /* Pixels of each image */
-    GifFileType * g ; /* Internal representation.
+    int n_images ; 		/* Number of images */
+    int * width ; 		/* Width of each image */
+    int * height ; 		/* Height of each image */
+    pixel ** p ; 		/* Pixels of each image */
+    GifFileType * g ; 	/* Internal representation.
                          DO NOT MODIFY */
 } animated_gif ;
 
@@ -613,9 +616,7 @@ void apply_gray_line( animated_gif * image ) {
     }
 }
 
-void
-apply_blur_filter( animated_gif * image, int size, int threshold )
-{
+void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int i, j, k ;
     int width, height ;
     int end = 0 ;
@@ -745,9 +746,7 @@ apply_blur_filter( animated_gif * image, int size, int threshold )
 
 }
 
-void
-apply_sobel_filter( animated_gif * image )
-{
+void apply_sobel_filter( animated_gif * image ) {
     int i, j, k ;
     int width, height ;
 
@@ -822,16 +821,14 @@ apply_sobel_filter( animated_gif * image )
 
 }
 
-int main( int argc, char ** argv )
-{
+int main( int argc, char ** argv ) {
     char * input_filename ; 
     char * output_filename ;
     animated_gif * image ;
     struct timeval t1, t2;
     double duration ;
 
-    if ( argc < 3 )
-    {
+    if ( argc < 3 ) {
         fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
         return 1 ;
     }

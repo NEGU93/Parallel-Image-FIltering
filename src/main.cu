@@ -7,9 +7,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#ifdef _WIN32
+#include <windows.h>                // for Windows APIs
+#else
 #include <sys/time.h>
+#endif
 
-#include <gif_lib.h>
+#include "gif_lib.h"
 
 #include <cuda_runtime.h>
 #include <cuda.h>
@@ -17,16 +21,14 @@
 #define SOBELF_DEBUG 0
 
 /* Represent one pixel from the image */
-typedef struct pixel
-{
+typedef struct pixel {
     int r ; /* Red */
     int g ; /* Green */
     int b ; /* Blue */
 } pixel ;
 
 /* Represent one GIF image (animated or not */
-typedef struct animated_gif
-{
+typedef struct animated_gif {
     int n_images ; 		/* Number of images */
     int * width ; 		/* Width of each image */
     int * height ; 		/* Height of each image */
@@ -60,8 +62,7 @@ animated_gif * load_pixels( char * filename ) {
 
     /* Read the GIF image */
     error = DGifSlurp( g ) ;
-    if ( error != GIF_OK )
-    {
+    if ( error != GIF_OK ) {
         fprintf( stderr, 
                 "Error DGifSlurp: %d <%s>\n", error, GifErrorString(g->Error) ) ;
         return NULL ;
@@ -623,125 +624,100 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int n_iter = 0 ;
 
     pixel ** p ;
-    pixel * new ;
+    pixel * newp ;
 
     /* Get the pixels of all images */
     p = image->p ;
 
 
     /* Process all images */
-    for ( i = 0 ; i < image->n_images ; i++ )
-    {
+    for ( i = 0 ; i < image->n_images ; i++ ) {
         n_iter = 0 ;
         width = image->width[i] ;
         height = image->height[i] ;
 
         /* Allocate array of new pixels */
-        new = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
+        newp = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 
         /* Perform at least one blur iteration */
-        do
-        {
+        do {
             end = 1 ;
             n_iter++ ;
 
             /* Apply blur on top part of image (10%) */
-            for(j=size; j<height/10-size; j++)
-            {
-                for(k=size; k<width-size; k++)
-                {
+            for(j=size; j<height/10-size; j++) {
+                for(k=size; k<width-size; k++) {
                     int stencil_j, stencil_k ;
                     int t_r = 0 ;
                     int t_g = 0 ;
                     int t_b = 0 ;
 
-                    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
-                    {
-                        for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
-                        {
+                    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ ) {
+                        for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ ) {
                             t_r += p[i][CONV(j+stencil_j,k+stencil_k,width)].r ;
                             t_g += p[i][CONV(j+stencil_j,k+stencil_k,width)].g ;
                             t_b += p[i][CONV(j+stencil_j,k+stencil_k,width)].b ;
                         }
                     }
 
-                    new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-                    new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-                    new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
                 }
             }
 
             /* Copy the middle part of the image */
-            for(j=height/10-size; j<height*0.9+size; j++)
-            {
-                for(k=size; k<width-size; k++)
-                {
-                    new[CONV(j,k,width)].r = p[i][CONV(j,k,width)].r ; 
-                    new[CONV(j,k,width)].g = p[i][CONV(j,k,width)].g ; 
-                    new[CONV(j,k,width)].b = p[i][CONV(j,k,width)].b ; 
+            for(j=height/10-size; j<height*0.9+size; j++) {
+                for(k=size; k<width-size; k++) {
+                    newp[CONV(j,k,width)].r = p[i][CONV(j,k,width)].r ; 
+                    newp[CONV(j,k,width)].g = p[i][CONV(j,k,width)].g ; 
+                    newp[CONV(j,k,width)].b = p[i][CONV(j,k,width)].b ; 
                 }
             }
 
             /* Apply blur on the bottom part of the image (10%) */
-            for(j=height*0.9+size; j<height-size; j++)
-            {
-                for(k=size; k<width-size; k++)
-                {
+            for(j=height*0.9+size; j<height-size; j++) {
+                for(k=size; k<width-size; k++) {
                     int stencil_j, stencil_k ;
                     int t_r = 0 ;
                     int t_g = 0 ;
                     int t_b = 0 ;
 
-                    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
-                    {
-                        for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
-                        {
+                    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ ) {
+                        for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ ) {
                             t_r += p[i][CONV(j+stencil_j,k+stencil_k,width)].r ;
                             t_g += p[i][CONV(j+stencil_j,k+stencil_k,width)].g ;
                             t_b += p[i][CONV(j+stencil_j,k+stencil_k,width)].b ;
                         }
                     }
-
-                    new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-                    new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-                    new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+                    newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
                 }
             }
 
-            for(j=1; j<height-1; j++)
-            {
-                for(k=1; k<width-1; k++)
-                {
-
+            for(j=1; j<height-1; j++) {
+                for(k=1; k<width-1; k++) {
                     float diff_r ;
                     float diff_g ;
                     float diff_b ;
 
-                    diff_r = (new[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
-                    diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
-                    diff_b = (new[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
+                    diff_r = (newp[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
+                    diff_g = (newp[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
+                    diff_b = (newp[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
 
-                    if ( diff_r > threshold || -diff_r > threshold 
-                            ||
-                             diff_g > threshold || -diff_g > threshold
-                             ||
-                              diff_b > threshold || -diff_b > threshold
-                       ) {
+                    if ( diff_r > threshold || -diff_r > threshold || diff_g > threshold || -diff_g > threshold || diff_b > threshold || -diff_b > threshold) {
                         end = 0 ;
                     }
 
-                    p[i][CONV(j  ,k  ,width)].r = new[CONV(j  ,k  ,width)].r ;
-                    p[i][CONV(j  ,k  ,width)].g = new[CONV(j  ,k  ,width)].g ;
-                    p[i][CONV(j  ,k  ,width)].b = new[CONV(j  ,k  ,width)].b ;
+                    p[i][CONV(j  ,k  ,width)].r = newp[CONV(j  ,k  ,width)].r ;
+                    p[i][CONV(j  ,k  ,width)].g = newp[CONV(j  ,k  ,width)].g ;
+                    p[i][CONV(j  ,k  ,width)].b = newp[CONV(j  ,k  ,width)].b ;
                 }
             }
-
-        }
-        while ( threshold > 0 && !end ) ;
-
+        } while ( threshold > 0 && !end ) ;
         // printf( "Nb iter for image %d\n", n_iter ) ;
-
-        free (new) ;
+        free (newp) ;
     }
 
 }
@@ -825,28 +801,50 @@ int main( int argc, char ** argv ) {
     char * input_filename ; 
     char * output_filename ;
     animated_gif * image ;
-    struct timeval t1, t2;
+	#ifdef _WIN32
+	LARGE_INTEGER frequency;        // ticks per second
+	LARGE_INTEGER t1, t2;           // ticks
+	#else
+	struct timeval t1, t2;
+	#endif
+
     double duration ;
 
     if ( argc < 3 ) {
-        fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
+        fprintf( stderr, "Usage: %s input.gif output.gif\n Only %d argument(s) were passed\n", argv[0], argc ) ;
+		for (int i = 1; i < argc; i++) {
+			fprintf(stderr, "Argument %d: %s\n", i,argv[i]);
+		}
         return 1 ;
     }
 
     input_filename = argv[1] ;
     output_filename = argv[2] ;
-
 		/************************
 		*	IMPORT GIF IMAGE	*
 		************************/
     /* IMPORT Timer start */
-    gettimeofday(&t1, NULL);
+	#ifdef _WIN32
+	// get ticks per second
+	QueryPerformanceFrequency(&frequency);
+	// start timer
+	QueryPerformanceCounter(&t1);
+	#else
+	gettimeofday(&t1, NULL);
+	#endif
+
     /* Load file and store the pixels in array */
     image = load_pixels( input_filename ) ;
     if ( image == NULL ) { return 1 ; }
     /* IMPORT Timer stop */
-    gettimeofday(&t2, NULL);
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t2); 	// start timer
+	duration = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart; 	// compute and print the elapsed time in millisec
+	#else
+	gettimeofday(&t2, NULL);
+	duration = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1e6);
+	#endif
     //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration );
 	fprintf(stdout, "L %lf\n", duration);
 
@@ -854,36 +852,74 @@ int main( int argc, char ** argv ) {
 		*	APPLY GRAY FILTER	*
 		************************/
     /* FILTER Timer start */
-    gettimeofday(&t1, NULL);
+	#ifdef _WIN32
+	// get ticks per second
+	QueryPerformanceFrequency(&frequency);
+	// start timer
+	QueryPerformanceCounter(&t1);
+	#else
+	gettimeofday(&t1, NULL);
+	#endif
     /* Convert the pixels into grayscale */
     apply_gray_filter( image ) ;
 	/* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-	duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+	#ifdef _WIN32
+	// get ticks per second
+	QueryPerformanceFrequency(&frequency);
+	// start timer
+	QueryPerformanceCounter(&t2);
+	// compute and print the elapsed time in millisec
+	duration = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+	#else
+	gettimeofday(&t2, NULL);
+	duration = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1e6);
+	#endif
 	fprintf(stdout, "G %lf\n", duration);
 
 		/************************
 		*	APPLY BLUR FILTER	*
 		************************/
 	/* FILTER Timer start */
-    gettimeofday(&t1, NULL);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t1); 	// start timer
+	#else
+	gettimeofday(&t1, NULL);
+	#endif
     /* Apply blur filter with convergence value */
     apply_blur_filter( image, 5, 20 ) ;
 	/* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-	duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t2); 	// start timer
+	duration = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart; 	// compute and print the elapsed time in millisec
+	#else
+	gettimeofday(&t2, NULL);
+	duration = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1e6);
+	#endif
 	fprintf(stdout, "B %lf\n", duration);
 
 		/************************
 		*	APPLY SOBEL FILTER	*
 		************************/
 	/* FILTER Timer start */
-    gettimeofday(&t1, NULL);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t1); 	// start timer
+	#else
+	gettimeofday(&t1, NULL);
+	#endif
     /* Apply sobel filter on pixels */
     apply_sobel_filter( image ) ;
     /* FILTER Timer stop */
-    gettimeofday(&t2, NULL);
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t2); 	// start timer
+	duration = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart; 	// compute and print the elapsed time in millisec
+	#else
+	gettimeofday(&t2, NULL);
+	duration = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1e6);
+	#endif
 	fprintf(stdout, "S %lf\n", duration);
     //printf( "SOBEL done in %lf s\n", duration ) ;
 
@@ -891,12 +927,23 @@ int main( int argc, char ** argv ) {
 		*	EXPORT GIF IMAGE	*
 		************************/
     /* EXPORT Timer start */
-    gettimeofday(&t1, NULL);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t1); 	// start timer
+	#else
+	gettimeofday(&t1, NULL);
+	#endif
     /* Store file from array of pixels to GIF file */
     if ( !store_pixels( output_filename, image ) ) { return 1 ; }
     /* EXPORT Timer stop */
-    gettimeofday(&t2, NULL);
-    duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
+	#ifdef _WIN32
+	QueryPerformanceFrequency(&frequency); 	// get ticks per second
+	QueryPerformanceCounter(&t2); 	// start timer
+	duration = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart; 	// compute and print the elapsed time in millisec
+	#else
+	gettimeofday(&t2, NULL);
+	duration = (t2.tv_sec - t1.tv_sec) + ((t2.tv_usec - t1.tv_usec) / 1e6);
+	#endif
 	fprintf(stdout, "E %lf\n", duration);
     //printf( "Export done in %lf s in file %s\n", duration, output_filename ) ;
 

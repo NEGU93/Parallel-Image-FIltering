@@ -12,7 +12,11 @@ two modules will be linked.  Preserve this property!
 #include <limits.h>
 #include <stdint.h>
 #include <fcntl.h>
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 

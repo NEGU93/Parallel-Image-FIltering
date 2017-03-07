@@ -10,7 +10,7 @@
 #include <sys/time.h>
 #include <mpi.h> /* MPI function signatures */
 
-#include <gif_lib.h>
+#include "gif_lib.h"
 
 #define ROOT 	0
 

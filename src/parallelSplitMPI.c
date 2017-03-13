@@ -131,8 +131,14 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
 {
     int groupSize = nbTasks / 2; // one on top and one on bottom
 
-    int stripeHeight = height / 10 - size;
+    int stripeHeight = height / 10 - (2*size);
+//    int stripeHeight = height / 10 - size;
     int stripeWidth = width - (2 * size);
+
+    if(stripeHeight <= 0 || stripeWidth <= 0)
+    {
+	return 0; // no work to do
+    }
 
     int dimSize[2];
     int adjustedSize = groupSize + ((nbTasks % 2 != 0 && myRank >= groupSize) ? 1 : 0); // add one to bottom group if odd number of tasks
@@ -437,6 +443,14 @@ void sendRecvOverlaps(pixel* myImg, int myRank, int* myDimRank, int* myDimGroup,
 		 myRank + 1);
     }
 }
+
+
+// same as "sendRecvOverlaps" but with better performances
+void sendRecvOverlaps2(pixel* myImg, int myRank, int* myDimRank, int* myDimGroup, int myHeight, int myWidth, int size)
+{
+    
+}
+
 
 void updateImg(pixel* p, int pHeight, int pWidth, pixel* myImg, int myRank, int nbTasks, int* shape, int size)
 {

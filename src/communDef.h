@@ -1,3 +1,6 @@
+#ifndef DEF_COMMUN_DEF
+#define DEF_COMMUN_DEF
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -58,3 +61,5 @@ void apply_gray_line( animated_gif * image ); // NOTE: pas de recouvrement
 void apply_blur_filter( animated_gif * image, int size, int threshold );
 
 void apply_sobel_filter( animated_gif * image );
+
+#endif

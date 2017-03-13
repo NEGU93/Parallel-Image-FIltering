@@ -105,8 +105,8 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	transfer_pixel_array_H2D(width*height, p, d_p);
 
 	/* Call Kernel */
-	//apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
-	//fprintf(stdout, "d_new = %d\n", d_new);
+	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
+
 	transfer_pixel_array_D2H(width*height, newp, d_new);
 
 	cudaFree(d_p);

@@ -108,6 +108,9 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	//apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
 	//fprintf(stdout, "d_new = %d\n", d_new);
 	transfer_pixel_array_D2H(width*height, newp, d_new);
+
+	cudaFree(d_p);
+	cudaFree(d_new);
 }
 /*
  * Load a GIF image from a file and return a

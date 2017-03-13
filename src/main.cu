@@ -96,19 +96,16 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	pixel * d_new;
 	dim3 gridDim(2);
 	dim3 blockDim(8, 8);
-
 	/* Alloc everything in device */
 	alloc_device_pixel_array(width, height, &d_p);
 	alloc_device_pixel_array(width, height, &d_new);
-
 	/* Copy to memory */
 	transfer_pixel_array_H2D(width*height, p, d_p);
-
 	/* Call Kernel */
 	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
-
+	/* Copy the result */
 	transfer_pixel_array_D2H(width*height, newp, d_new);
-
+	/* Free everything in the device */
 	cudaFree(d_p);
 	cudaFree(d_new);
 }

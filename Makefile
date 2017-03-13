@@ -3,8 +3,8 @@ HEADER_DIR=include
 OBJ_DIR=obj
 
 CC=nvcc
-CFLAGS=-O3 -I$(HEADER_DIR) -I/usr/local/cuda/include -I.
-LDFLAGS=-lm -L/usr/local/cuda/lib
+CFLAGS=-O3 -I$(HEADER_DIR) 
+LDFLAGS=-lm
 
 SRC= dgif_lib.c \
 	egif_lib.c \
@@ -35,11 +35,12 @@ $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cu
-	$(CC) $(CFLAGS) -o $@ $^ -L/usr/local/cuda/lib
+	$(CC) $(CFLAGS) -c -I/usr/local/cuda/include -I. -o $@ $^ -I/usr/local/cuda/samples/0_Simple/simplePrintf/
 
 
 sobelf:$(OBJ)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^ -L/usr/local/cuda/lib 
+
 
 clean:
 	rm -f sobelf $(OBJ)

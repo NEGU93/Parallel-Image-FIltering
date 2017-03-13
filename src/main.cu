@@ -15,6 +15,7 @@
 #include <sys/time.h>
 #endif
 
+#include <cuPrintf.cu>
 #include "gif_lib.h"
 
 #include <cuda_runtime.h>
@@ -44,10 +45,12 @@ typedef struct animated_gif {
 
 __global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p, pixel * newp) {
 	int j, k;
-	int row = blockIdx.y + blockDim.y + threadIdx.y;
-	int	col = blockIdx.x + blockDim.x + threadIdx.x;
-	for (j = row + size; j < height / 10 - size; j += (blockIdx.y + blockDim.y) ) {
-		for (k = col + size; k < width - size; k += (blockIdx.x + blockDim.x)) {
+	int row = threadIdx.y;
+	int	col = threadIdx.x;
+	//cuPrintf("j = %d + %d < %d. j+= %d\n", row, size, height / 10 - size, blockDim.y );
+	//cuPrintf("k = %d + %d < %d. k+= %d\n", col, size, width - size, blockDim.x);
+	for (j = row + size; j < height / 10 - size; j += blockDim.y ) {
+		for (k = col + size; k < width - size; k += blockDim.x) {
 			int stencil_j, stencil_k;
 			int t_r = 0;
 			int t_g = 0;
@@ -66,7 +69,6 @@ __global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p
 			newp[CONV(j, k, width)].b = t_b / ((2 * size + 1)*(2 * size + 1));
 		}
 	}
-
 }
 
 /* Cuda inits */
@@ -94,7 +96,7 @@ void transfer_pixel_array_D2H(int N, pixel *p, pixel *d_p) {
 void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	pixel * d_p;
 	pixel * d_new;
-	dim3 gridDim(2);
+	dim3 gridDim(1);
 	dim3 blockDim(8, 8);
 	/* Alloc everything in device */
 	alloc_device_pixel_array(width, height, &d_p);
@@ -102,7 +104,10 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	/* Copy to memory */
 	transfer_pixel_array_H2D(width*height, p, d_p);
 	/* Call Kernel */
+	//cudaPrintfInit();
 	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
+	//cudaPrintfDisplay(stdout, true);
+    //cudaPrintfEnd();
 	/* Copy the result */
 	transfer_pixel_array_D2H(width*height, newp, d_new);
 	/* Free everything in the device */

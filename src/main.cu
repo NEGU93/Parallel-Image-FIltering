@@ -6,9 +6,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <iostream>
 #include <math.h>
 #ifdef _WIN32
-#include <windows.h>                // for Windows APIs
+#include <windows.h>					// for Windows APIs
+#include "device_launch_parameters.h"	// For VS to recognize the blockIdx
 #else
 #include <sys/time.h>
 #endif
@@ -64,31 +66,31 @@ __global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p
 			newp[CONV(j, k, width)].b = t_b / ((2 * size + 1)*(2 * size + 1));
 		}
 	}
+
 }
 
 /* Cuda inits */
 void alloc_device_pixel_array(int w, int h, pixel **p) {
 	cudaError_t err = cudaMalloc(p, w * h * sizeof(pixel));
 	if (err != cudaSuccess) { 
-		fprintf(stderr, "%s failed to alloc\n", __FUNCTION__); 
+		fprintf(stderr, "GPUassert: %s in function %s line %d\n", cudaGetErrorString(err), __FUNCTION__, __LINE__);
 		abort(); 
 	}
 }
 void transfer_pixel_array_H2D(int N, pixel *p, pixel *d_p) {
 	cudaError_t err = cudaMemcpy(d_p, p, N * sizeof(pixel), cudaMemcpyHostToDevice);
 	if (err != cudaSuccess) { 
-		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__); 
+		fprintf(stderr, "GPUassert: %s in function %s line %d\n", cudaGetErrorString(err), __FUNCTION__, __LINE__);
 		abort(); 
 	}
 }
 void transfer_pixel_array_D2H(int N, pixel *p, pixel *d_p) {
 	cudaError_t err = cudaMemcpy(p, d_p, N * sizeof(pixel), cudaMemcpyDeviceToHost);
 	if (err != cudaSuccess) { 
-		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__); 
+		fprintf(stderr, "GPUassert: %s in function %s line %d\n", cudaGetErrorString(err), __FUNCTION__, __LINE__);
 		abort(); 
 	}
 }
-
 void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	pixel * d_p;
 	pixel * d_new;
@@ -96,27 +98,16 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	dim3 blockDim(8, 8);
 
 	/* Alloc everything in device */
-	//alloc_device_pixel_array(width, height, &d_p);
-	cudaError_t err = cudaMalloc((void **)&d_p, width * height * sizeof(pixel));
-	if (err != cudaSuccess) {
-		fprintf(stderr, "%s failed to alloc\n", __FUNCTION__);
-		abort();
-	}
+	alloc_device_pixel_array(width, height, &d_p);
 	alloc_device_pixel_array(width, height, &d_new);
-	
+
 	/* Copy to memory */
-	//transfer_pixel_array_H2D(width*height, p, d_p);
-	//fprintf(stdout, "%d", d_p->r);
-	err = cudaMemcpy(d_p, p, width * height * sizeof(pixel), cudaMemcpyHostToDevice);
-	if (err != cudaSuccess) {
-		fprintf(stderr, "%s:%d failed to transfer\n", __FUNCTION__, __LINE__);
-		abort();
-	}
+	transfer_pixel_array_H2D(width*height, p, d_p);
 
 	/* Call Kernel */
-	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
-
-	transfer_pixel_array_D2H(width*height, d_new, newp);
+	//apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
+	//fprintf(stdout, "d_new = %d\n", d_new);
+	transfer_pixel_array_D2H(width*height, newp, d_new);
 }
 /*
  * Load a GIF image from a file and return a
@@ -304,7 +295,6 @@ int output_modified_read_gif( char * filename, GifFileType * g ) {
 
     return 1 ;
 }
-
 int store_pixels( char * filename, animated_gif * image ) {
     int n_colors = 0 ;
     pixel ** p ;
@@ -639,7 +629,6 @@ int store_pixels( char * filename, animated_gif * image ) {
 
     return 1 ;
 }
-
 void apply_gray_filter( animated_gif * image ) {
     int i, j ;
     pixel ** p ;
@@ -663,7 +652,6 @@ void apply_gray_filter( animated_gif * image ) {
         }
     }
 }
-
 void apply_gray_line( animated_gif * image ) {
     int i, j, k ;
     pixel ** p ;
@@ -683,13 +671,13 @@ void apply_gray_line( animated_gif * image ) {
         }
     }
 }
-
 void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int i, j, k ;
     int width, height ;
     int end = 0 ;
     int n_iter = 0 ;
     pixel ** p ;
+	pixel * s_p;
     pixel * newp ;
     /* Get the pixels of all images */
     p = image->p ;
@@ -697,8 +685,8 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     /* Process all images */
     for ( i = 0 ; i < image->n_images ; i++ ) {
         n_iter = 0 ;
-        width = image->width[i] ;
-        height = image->height[i] ;
+        width = image->width[i];
+        height = image->height[i];
 
         /* Allocate array of new pixels */
         newp = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
@@ -707,9 +695,9 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
         do {
             end = 1 ;
             n_iter++ ;
-
+			s_p = p[i];
             /* Apply blur on top part of image (10%) */
-			apply_blur_top(height, width, size, p[i], newp);
+			apply_blur_top(height, width, size, s_p, newp);
 
             /* Copy the middle part of the image */
             for(j=height/10-size; j<height*0.9+size; j++) {
@@ -766,7 +754,6 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     }
 
 }
-
 void apply_sobel_filter( animated_gif * image ) {
     int i, j, k ;
     int width, height ;
@@ -841,7 +828,6 @@ void apply_sobel_filter( animated_gif * image ) {
     }
 
 }
-
 int main( int argc, char ** argv ) {
     char * input_filename ; 
     char * output_filename ;
@@ -860,9 +846,9 @@ int main( int argc, char ** argv ) {
 		for (int i = 1; i < argc; i++) {
 			fprintf(stderr, "Argument %d: %s\n", i,argv[i]);
 		}
-        return 1 ;
+		return 1 ;
     }
-
+        
     input_filename = argv[1] ;
     output_filename = argv[2] ;
 		/************************
@@ -898,10 +884,8 @@ int main( int argc, char ** argv ) {
 		************************/
     /* FILTER Timer start */
 	#ifdef _WIN32
-	// get ticks per second
-	QueryPerformanceFrequency(&frequency);
-	// start timer
-	QueryPerformanceCounter(&t1);
+	QueryPerformanceFrequency(&frequency);	// get ticks per second
+	QueryPerformanceCounter(&t1);			// start timer
 	#else
 	gettimeofday(&t1, NULL);
 	#endif

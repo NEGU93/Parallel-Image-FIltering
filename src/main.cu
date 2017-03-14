@@ -45,12 +45,12 @@ typedef struct animated_gif {
 
 __global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p, pixel * newp) {
 	int j, k;
-	int row = threadIdx.x;
-	int	col = threadIdx.y;
+	int row = blockDim.x * blockIdx.x + threadIdx.x;
+	int	col = blockDim.y * blockIdx.y + threadIdx.y;
 	//cuPrintf("j = %d + %d < %d. j+= %d\n", row, size, height / 10 - size, blockDim.y );
 	//cuPrintf("k = %d + %d < %d. k+= %d\n", col, size, width - size, blockDim.x);
-	for (j = row + size; j < height / 10 - size; j += blockDim.x ) {
-		for (k = col + size; k < width - size; k += blockDim.y ) {
+	for (j = row + size; j < height / 10 - size; j += blockDim.x * gridDim.x ) {
+		for (k = col + size; k < width - size; k += blockDim.y * gridDim.y ) {
 			int stencil_j, stencil_k;
 			int t_r = 0;
 			int t_g = 0;
@@ -96,7 +96,7 @@ void transfer_pixel_array_D2H(int N, pixel *p, pixel *d_p) {
 void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	pixel * d_p;
 	pixel * d_new;
-	dim3 gridDim(1);
+	dim3 gridDim(10, 10);
 	dim3 blockDim(8, 8);
 	/* Alloc everything in device */
 	alloc_device_pixel_array(width, height, &d_p);

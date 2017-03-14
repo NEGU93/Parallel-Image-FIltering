@@ -45,12 +45,12 @@ typedef struct animated_gif {
 
 __global__ void apply_blur_top_kernel(int height, int width, int size, pixel * p, pixel * newp) {
 	int j, k;
-	int row = threadIdx.y;
-	int	col = threadIdx.x;
+	int row = threadIdx.x;
+	int	col = threadIdx.y;
 	//cuPrintf("j = %d + %d < %d. j+= %d\n", row, size, height / 10 - size, blockDim.y );
 	//cuPrintf("k = %d + %d < %d. k+= %d\n", col, size, width - size, blockDim.x);
-	for (j = row + size; j < height / 10 - size; j += blockDim.y ) {
-		for (k = col + size; k < width - size; k += blockDim.x) {
+	for (j = row + size; j < height / 10 - size; j += blockDim.x ) {
+		for (k = col + size; k < width - size; k += blockDim.y ) {
 			int stencil_j, stencil_k;
 			int t_r = 0;
 			int t_g = 0;
@@ -105,7 +105,7 @@ void apply_blur_top(int height, int width, int size, pixel * p, pixel * newp) {
 	transfer_pixel_array_H2D(width*height, p, d_p);
 	/* Call Kernel */
 	//cudaPrintfInit();
-	apply_blur_top_kernel<<<gridDim, blockDim>>>(width, height, size, d_p, d_new);
+	apply_blur_top_kernel<<<gridDim, blockDim>>>(height, width, size, d_p, d_new);
 	//cudaPrintfDisplay(stdout, true);
     //cudaPrintfEnd();
 	/* Copy the result */

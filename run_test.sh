@@ -1,6 +1,6 @@
 #!/bin/bash
 
-make
+#make
 
 INPUT_DIR=images/original
 OUTPUT_DIR=images/processed

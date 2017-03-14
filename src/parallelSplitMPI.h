@@ -17,15 +17,17 @@ void copyImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offse
 void writeImg(pixel* input, pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width);
 
 // send a part of input
-void send(pixel* input, int inputWidth, int offsetX, int offsetY, int height, int width, int targetRank);
+void mon_send(pixel* input, int inputWidth, int offsetX, int offsetY, int height, int width, int targetRank);
 //receive a part of output
-void recv(pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width, int sourceRank);
+void mon_recv(pixel* output, int outputWidth, int offsetX, int offsetY, int height, int width, int sourceRank);
 
 void sendRecvOverlaps(pixel* myImg, int myRank, int* myDimRank, int* myDimGroup, int myHeight, int myWidth, int size);
+void sendRecvOverlaps2(pixel* myImg, int myRank, int* myDimRank, int* myDimGroup, int myHeight, int myWidth, int size);
 
 void updateImg(pixel* p, int pHeight, int pWidth, pixel* myImg, int myRank, int nbTasks, int* shape, int size);
 
-void blurFilter(animated_gif* image, int size, int threshold);
+void blurFilter(animated_gif* image, int size, int threshold, MPI_Comm myComm);
+void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm, int indexImg);
 
 int mainParallelSplitMPI(int argc, char** argv);
 

@@ -23,7 +23,17 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
 {
     int groupSize = nbTasks / 2; // one on top and one on bottom
 
-    int stripeHeight = height / 10 - (2*size);
+    int stripeHeight;
+    if(myRank < groupSize)
+    {
+	stripeHeight = height / 10 - (2*size);
+    }
+    else
+    {
+	int tmp = height * 0.9;
+	stripeHeight = height - tmp - (2*size);
+    }
+
     int stripeWidth = width - (2 * size);
 
     if(stripeHeight <= 0 || stripeWidth <= 0)

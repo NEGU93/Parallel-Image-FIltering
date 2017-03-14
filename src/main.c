@@ -668,9 +668,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 			}
 		}
 
-		for(j=1; j<height-1; j++)
+		for(j=size; j<height-size; j++)
 		{
-			for(k=1; k<width-1; k++)
+			for(k=size; k<width-size; k++)
 			{
 
 				float diff_r ;

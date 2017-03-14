@@ -724,12 +724,16 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 	MPI_Comm_size(MPI_COMM_LOCAL, &n_task_per_image);
 
     /* Process all images */
-    for ( i = me ; i < image->n_images ; i+= P) {
-		if ( n_task_per_image > 1) {
-        	oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
-		}
-		else {
-			one_task_blur(image, size, threshold, i);
+    for ( i = 0 ; i < image->n_images ; i++) {
+		if ( color == i % P ) {
+			if ( n_task_per_image > 1) {
+        		oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
+			}
+			else {
+				fprintf(stdout, "Calling function\n"); fflush(stdout);
+				one_task_blur(image, size, threshold, i);
+				fprintf(stdout, "Out of function\n"); fflush(stdout);
+			}
 		}
     }
 }

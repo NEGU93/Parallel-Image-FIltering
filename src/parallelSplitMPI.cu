@@ -686,7 +686,7 @@ void updateImg(pixel* p, int pHeight, int pWidth, pixel* myImg, int myRank, int 
 	MPI_Send(shape, 4, MPI_INT, ROOT, myRank, MPI_COMM_WORLD);
     }
 }
-
+ 
 void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm, int indexImg)
 {
     int i = indexImg;
@@ -754,60 +754,9 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	    }
 
 
-		apply_blur_cuda(myHeight, myWidth, size, myImg, newp);
-	    /*// apply blur
-	    for(j = size; j < myHeight - size; j++)
-	    {
-		for(k = size; k < myWidth - size; k++)
-		{
-		    int stencil_j, stencil_k ;
-		    int t_r = 0 ;
-		    int t_g = 0 ;
-		    int t_b = 0 ;
-
-		    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
-		    {
-			for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
-			{
-			    t_r += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].r ;
-			    t_g += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].g ;
-			    t_b += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].b ;
-			}
-		    }
-
-		    newp[CONV(j,k,myWidth)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-		    newp[CONV(j,k,myWidth)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-		    newp[CONV(j,k,myWidth)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
-		}
-	    }*/
-
+		end = apply_blur_cuda(myHeight, myWidth, size, myImg, threshold);
 	    // actu img and end ?
-	    for(j = size; j < myHeight - size; j++)
-	    {
-		for(k = size; k < myWidth - size; k++)
-		{
-		    float diff_r;
-		    float diff_g;
-		    float diff_b;
-
-		    diff_r = newp[CONV(j,k,myWidth)].r - myImg[CONV(j,k,myWidth)].r;
-		    diff_g = newp[CONV(j,k,myWidth)].g - myImg[CONV(j,k,myWidth)].g;
-		    diff_b = newp[CONV(j,k,myWidth)].b - myImg[CONV(j,k,myWidth)].b;
-
-		    if ( diff_r > threshold || -diff_r > threshold
-			 ||
-			 diff_g > threshold || -diff_g > threshold
-			 ||
-			 diff_b > threshold || -diff_b > threshold
-			) {
-			end = 0 ;
-		    }
-
-		    myImg[CONV(j,k,myWidth)].r = newp[CONV(j,k,myWidth)].r;
-		    myImg[CONV(j,k,myWidth)].g = newp[CONV(j,k,myWidth)].g;
-		    myImg[CONV(j,k,myWidth)].b = newp[CONV(j,k,myWidth)].b;
-		}
-	    }
+	    
 
 	    int endReduce;
 	    MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_MIN, myComm);

@@ -14,20 +14,24 @@
 
 #define ROOT 	0
 
-#define SOBELF_DEBUG 0
-#define MAX
+//#define SOBELF_DEBUG 0
+//#define MAX
 //#define GATHER_DEBUG 0
+
+#define MPI_MULTI_IMAGE 	1
+#define MPI_IN_ONE_IMAGE	2
+
+MPI_Comm MPI_COMM_LOCAL;
+
 /* Represent one pixel from the image */
-typedef struct pixel
-{
+typedef struct pixel {
     int r ; /* Red */
     int g ; /* Green */
     int b ; /* Blue */
 } pixel ;
 
 /* Represent one GIF image (animated or not */
-typedef struct animated_gif
-{
+typedef struct animated_gif {
     int n_images ; /* Number of images */
     int * width ; /* Width of each image */
     int * height ; /* Height of each image */
@@ -580,8 +584,7 @@ void apply_gray_filter( animated_gif * image ) {
 #define CONV(l,c,nb_c) \
     (l)*(nb_c)+(c)
 
-void apply_gray_line( animated_gif * image ) // NOTE: pas de recouvrement
-{
+void apply_gray_line( animated_gif * image ) {
     int i, j, k ;
 	int me, P;
     pixel ** p ;
@@ -610,6 +613,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int end = 0 ;
     int n_iter = 0 ;
 	int me, P;
+	int color;
     pixel ** p ;
     pixel * new ;
 
@@ -618,6 +622,13 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     /* Get the pixels of all images */
     p = image->p ;
 
+	if ( me < image->n_images ) {
+		color = MPI_MULTI_IMAGE;
+	}
+	else {
+		color = MPI_IN_ONE_IMAGE;
+	}
+	MPI_Comm_split(MPI_COMM_WORLD, color, me, &MPI_COMM_LOCAL);
 
     /* Process all images */
     for ( i = me ; i < image->n_images ; i+= P ) {
@@ -864,7 +875,7 @@ int main( int argc, char ** argv ) {
     struct timeval t1, t2;
     double duration ;
 	int me;
-	
+
 	MPI_Init(&argc, &argv); /* Initialization of MPI */
 	
 	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
@@ -872,6 +883,7 @@ int main( int argc, char ** argv ) {
         fprintf( stderr, "Usage: %s input.gif output.gif \n", argv[0] ) ;
         return 1 ;
     }
+	
 
     input_filename = argv[1] ;
     output_filename = argv[2] ;
@@ -880,10 +892,8 @@ int main( int argc, char ** argv ) {
     gettimeofday(&t1, NULL);
 
     /* Load file and store the pixels in array */
-	//if (me == ROOT) {
     image = load_pixels( input_filename );
-	//}
-	//MPI_Bcast(image, , MPI_datatype, ROOT, MPI_COMM_WORLD);
+
     if ( image == NULL ) { return 1 ; }
 
     /* IMPORT Timer stop */

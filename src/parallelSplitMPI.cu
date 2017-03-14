@@ -749,14 +749,12 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 
 	    if(n_iter > 0)
 	    {
-//		    sendRecvOverlaps(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
-		sendRecvOverlaps2(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
+			//sendRecvOverlaps(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
+			sendRecvOverlaps2(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
 	    }
-
 
 		end = apply_blur_cuda(myHeight, myWidth, size, myImg, threshold);
 	    // actu img and end ?
-	    
 
 	    int endReduce;
 	    MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_MIN, myComm);

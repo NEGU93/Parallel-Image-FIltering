@@ -23,7 +23,7 @@ animated_gif *load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
-	//int me, P;
+	int me, P, color;
     int n_images ;
     int * width ;
     int * height ;
@@ -31,8 +31,9 @@ animated_gif *load_pixels( char * filename ) {
     int i ;
     animated_gif * image ;
 
-	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	color = me % image->n_images;
 
     /* Open the GIF image (read mode) */
     g = DGifOpenFileName( filename, &error ) ;
@@ -118,23 +119,25 @@ animated_gif *load_pixels( char * filename ) {
 
     /* For each image */
     for ( i = 0 ; i < n_images ; i ++ ) {
-        int j ;
-        /* Get the local colormap if needed */
-        if ( g->SavedImages[i].ImageDesc.ColorMap ) {
-            /* TODO No support for local color map */
-            fprintf( stderr, "Error: application does not support local colormap\n" ) ;
-            return NULL ;
-            colmap = g->SavedImages[i].ImageDesc.ColorMap ;
-        }
+		//if ( color == i % P ) {
+			int j ;
+        	/* Get the local colormap if needed */
+        	if ( g->SavedImages[i].ImageDesc.ColorMap ) {
+            	/* TODO No support for local color map */
+            	fprintf( stderr, "Error: application does not support local colormap\n" ) ;
+            	return NULL ;
+            	colmap = g->SavedImages[i].ImageDesc.ColorMap ;
+        	}
 
-        /* Traverse the image and fill pixels */
-        for ( j = 0 ; j < width[i] * height[i] ; j++ ) {
-            int c ;
-            c = g->SavedImages[i].RasterBits[j] ;
-            p[i][j].r = colmap->Colors[c].Red ;
-            p[i][j].g = colmap->Colors[c].Green ;
-            p[i][j].b = colmap->Colors[c].Blue ;
-        }
+        	/* Traverse the image and fill pixels */
+        	for ( j = 0 ; j < width[i] * height[i] ; j++ ) {
+            	int c ;
+            	c = g->SavedImages[i].RasterBits[j] ;
+            	p[i][j].r = colmap->Colors[c].Red ;
+           		p[i][j].g = colmap->Colors[c].Green ;
+            	p[i][j].b = colmap->Colors[c].Blue ;
+        	}
+		//}
     }
 
     /* Allocate image info */
@@ -533,26 +536,30 @@ int store_pixels( char * filename, animated_gif * image ) {
 
 void apply_gray_filter( animated_gif * image ) {
     int i, j ;
-	//int me, P;
+	int me, P, color;
     pixel ** p ;
 	
-	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     p = image->p ;
+	color = me % image->n_images;
+	
 
     for ( i = 0; i < image->n_images ; i++ ) {
-        for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
-            int moy ;
+		if ( color == i % P ) {
+        	for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
+            	int moy ;
 
-            // moy = p[i][j].r/4 + ( p[i][j].g * 3/4 ) ;
-            moy = (p[i][j].r + p[i][j].g + p[i][j].b)/3;
-            if ( moy < 0 ) moy = 0;
-            if ( moy > 255 ) moy = 255;
+            	// moy = p[i][j].r/4 + ( p[i][j].g * 3/4 ) ;
+            	moy = (p[i][j].r + p[i][j].g + p[i][j].b)/3;
+            	if ( moy < 0 ) moy = 0;
+            	if ( moy > 255 ) moy = 255;
 
-            p[i][j].r = moy;
-            p[i][j].g = moy;
-            p[i][j].b = moy;
-        }
+           		p[i][j].r = moy;
+            	p[i][j].g = moy;
+          	  	p[i][j].b = moy;
+        	}
+		}
     }
 }
 
@@ -695,7 +702,6 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 				p[i][CONV(j  ,k  ,width)].b = newp[CONV(j  ,k  ,width)].b ;
 			}
 		}
-
 	}
 	while ( threshold > 0 && !end ) ;
 
@@ -730,9 +736,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
         		oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
 			}
 			else {
-				fprintf(stdout, "Calling function\n"); fflush(stdout);
 				one_task_blur(image, size, threshold, i);
-				fprintf(stdout, "Out of function\n"); fflush(stdout);
 			}
 		}
     }
@@ -741,77 +745,73 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 void apply_sobel_filter( animated_gif * image ) {
     int i, j, k ;
     int width, height ;
-	//int me, P;
+	int me, P, color;
     pixel ** p;
 
-	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     p = image->p;
+	color = me % image->n_images;
 
     for ( i = 0 ; i < image->n_images ; i ++ ) {
-        width = image->width[i] ;
-        height = image->height[i] ;
+		if ( color == i % P ) {
+        	width = image->width[i] ;
+        	height = image->height[i] ;
 
-        pixel * sobel ;
+        	pixel * sobel ;
 
-        sobel = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
+        	sobel = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 
-        for(j=1; j<height-1; j++)
-        {
-            for(k=1; k<width-1; k++)
-            {
-                int pixel_blue_no, pixel_blue_n, pixel_blue_ne;
-                int pixel_blue_so, pixel_blue_s, pixel_blue_se;
-                int pixel_blue_o , pixel_blue  , pixel_blue_e ;
+        	for(j=1; j<height-1; j++) {
+            	for(k=1; k<width-1; k++) {
+                	int pixel_blue_no, pixel_blue_n, pixel_blue_ne;
+                	int pixel_blue_so, pixel_blue_s, pixel_blue_se;
+                	int pixel_blue_o , pixel_blue  , pixel_blue_e ;
 
-                float deltaX_blue ;
-                float deltaY_blue ;
-                float val_blue;
+					float deltaX_blue ;
+					float deltaY_blue ;
+					float val_blue;
 
-                pixel_blue_no = p[i][CONV(j-1,k-1,width)].b ;
-                pixel_blue_n  = p[i][CONV(j-1,k  ,width)].b ;
-                pixel_blue_ne = p[i][CONV(j-1,k+1,width)].b ;
-                pixel_blue_so = p[i][CONV(j+1,k-1,width)].b ;
-                pixel_blue_s  = p[i][CONV(j+1,k  ,width)].b ;
-                pixel_blue_se = p[i][CONV(j+1,k+1,width)].b ;
-                pixel_blue_o  = p[i][CONV(j  ,k-1,width)].b ;
-                pixel_blue    = p[i][CONV(j  ,k  ,width)].b ;
-                pixel_blue_e  = p[i][CONV(j  ,k+1,width)].b ;
-
-                deltaX_blue = -pixel_blue_no + pixel_blue_ne - 2*pixel_blue_o + 2*pixel_blue_e - pixel_blue_so + pixel_blue_se;             
-
-                deltaY_blue = pixel_blue_se + 2*pixel_blue_s + pixel_blue_so - pixel_blue_ne - 2*pixel_blue_n - pixel_blue_no;
-
-                val_blue = sqrt(deltaX_blue * deltaX_blue + deltaY_blue * deltaY_blue)/4;
-
-
-                if ( val_blue > 50 ) 
-                {
-                    sobel[CONV(j  ,k  ,width)].r = 255 ;
-                    sobel[CONV(j  ,k  ,width)].g = 255 ;
-                    sobel[CONV(j  ,k  ,width)].b = 255 ;
-                } else
-                {
-                    sobel[CONV(j  ,k  ,width)].r = 0 ;
-                    sobel[CONV(j  ,k  ,width)].g = 0 ;
-                    sobel[CONV(j  ,k  ,width)].b = 0 ;
-                }
-            }
+					pixel_blue_no = p[i][CONV(j-1,k-1,width)].b ;
+					pixel_blue_n  = p[i][CONV(j-1,k  ,width)].b ;
+					pixel_blue_ne = p[i][CONV(j-1,k+1,width)].b ;
+					pixel_blue_so = p[i][CONV(j+1,k-1,width)].b ;
+					pixel_blue_s  = p[i][CONV(j+1,k  ,width)].b ;
+					pixel_blue_se = p[i][CONV(j+1,k+1,width)].b ;
+					pixel_blue_o  = p[i][CONV(j  ,k-1,width)].b ;
+					pixel_blue    = p[i][CONV(j  ,k  ,width)].b ;
+					pixel_blue_e  = p[i][CONV(j  ,k+1,width)].b ;
+	
+					deltaX_blue = -pixel_blue_no + pixel_blue_ne - 2*pixel_blue_o + 2*pixel_blue_e - pixel_blue_so + pixel_blue_se;             
+	
+					deltaY_blue = pixel_blue_se + 2*pixel_blue_s + pixel_blue_so - pixel_blue_ne - 2*pixel_blue_n - pixel_blue_no;
+	
+					val_blue = sqrt(deltaX_blue * deltaX_blue + deltaY_blue * deltaY_blue)/4;
+	
+	
+					if ( val_blue > 50 ) {
+						sobel[CONV(j  ,k  ,width)].r = 255 ;
+						sobel[CONV(j  ,k  ,width)].g = 255 ;
+						sobel[CONV(j  ,k  ,width)].b = 255 ;
+					} else	{
+						sobel[CONV(j  ,k  ,width)].r = 0 ;
+						sobel[CONV(j  ,k  ,width)].g = 0 ;
+						sobel[CONV(j  ,k  ,width)].b = 0 ;
+					}
+				}
+			}
+	
+			for(j=1; j<height-1; j++) {
+				for(k=1; k<width-1; k++) {
+					p[i][CONV(j  ,k  ,width)].r = sobel[CONV(j  ,k  ,width)].r ;
+					p[i][CONV(j  ,k  ,width)].g = sobel[CONV(j  ,k  ,width)].g ;
+					p[i][CONV(j  ,k  ,width)].b = sobel[CONV(j  ,k  ,width)].b ;
+				}
+			}
+	
+			free (sobel) ;
         }
-
-        for(j=1; j<height-1; j++)
-        {
-            for(k=1; k<width-1; k++)
-            {
-                p[i][CONV(j  ,k  ,width)].r = sobel[CONV(j  ,k  ,width)].r ;
-                p[i][CONV(j  ,k  ,width)].g = sobel[CONV(j  ,k  ,width)].g ;
-                p[i][CONV(j  ,k  ,width)].b = sobel[CONV(j  ,k  ,width)].b ;
-            }
-        }
-
-        free (sobel) ;
     }
-
 }
 
 int get_everything_together(animated_gif * image) {

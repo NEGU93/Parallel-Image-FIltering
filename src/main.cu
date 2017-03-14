@@ -202,7 +202,7 @@ int store_pixels( char * filename, animated_gif * image ) {
     int i, j, k ;
     GifColorType * colormap ;
 
-    /* Initialize the new set of colors */
+    /* Initialize the newp set of colors */
     colormap = (GifColorType *)malloc( 256 * sizeof( GifColorType ) ) ;
     if ( colormap == NULL ) 
     {
@@ -457,7 +457,7 @@ int store_pixels( char * filename, animated_gif * image ) {
                 }
 
 #if SOBELF_DEBUG
-                printf( "[DEBUG] Found new %d color (%d,%d,%d)\n",
+                printf( "[DEBUG] Found newp %d color (%d,%d,%d)\n",
                         n_colors, p[i][j].r, p[i][j].g, p[i][j].b ) ;
 #endif
 
@@ -589,15 +589,15 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
     int n_iter = 0;
 
 	pixel** p;
-    pixel* new;
+    pixel* newp;
 	
     p = image->p;
 
     width = image->width[i] ;
     height = image->height[i] ;
 
-	/* Allocate array of new pixels */
-	new = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
+	/* Allocate array of newp pixels */
+	newp = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 
 	/* Perform at least one blur iteration */
 	do
@@ -625,9 +625,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 					}
 				}
 
-				new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-				new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-				new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
 			}
 		}
 
@@ -636,9 +636,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		{
 			for(k=size; k<width-size; k++)
 			{
-				new[CONV(j,k,width)].r = p[i][CONV(j,k,width)].r ; 
-				new[CONV(j,k,width)].g = p[i][CONV(j,k,width)].g ; 
-				new[CONV(j,k,width)].b = p[i][CONV(j,k,width)].b ; 
+				newp[CONV(j,k,width)].r = p[i][CONV(j,k,width)].r ; 
+				newp[CONV(j,k,width)].g = p[i][CONV(j,k,width)].g ; 
+				newp[CONV(j,k,width)].b = p[i][CONV(j,k,width)].b ; 
 			}
 		}
 
@@ -662,9 +662,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 					}
 				}
 
-				new[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-				new[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-				new[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+				newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
 			}
 		}
 
@@ -677,9 +677,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 				float diff_g ;
 				float diff_b ;
 
-				diff_r = (new[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
-				diff_g = (new[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
-				diff_b = (new[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
+				diff_r = (newp[CONV(j  ,k  ,width)].r - p[i][CONV(j  ,k  ,width)].r) ;
+				diff_g = (newp[CONV(j  ,k  ,width)].g - p[i][CONV(j  ,k  ,width)].g) ;
+				diff_b = (newp[CONV(j  ,k  ,width)].b - p[i][CONV(j  ,k  ,width)].b) ;
 
 				if ( diff_r > threshold || -diff_r > threshold 
 						||
@@ -690,9 +690,9 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 					end = 0 ;
 				}
 
-				p[i][CONV(j  ,k  ,width)].r = new[CONV(j  ,k  ,width)].r ;
-				p[i][CONV(j  ,k  ,width)].g = new[CONV(j  ,k  ,width)].g ;
-				p[i][CONV(j  ,k  ,width)].b = new[CONV(j  ,k  ,width)].b ;
+				p[i][CONV(j  ,k  ,width)].r = newp[CONV(j  ,k  ,width)].r ;
+				p[i][CONV(j  ,k  ,width)].g = newp[CONV(j  ,k  ,width)].g ;
+				p[i][CONV(j  ,k  ,width)].b = newp[CONV(j  ,k  ,width)].b ;
 			}
 		}
 
@@ -701,7 +701,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 
 	// printf( "Nb iter for image %d\n", n_iter ) ;
 
-	free (new) ;
+	free (newp) ;
 }
 void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     int i, j, k ;
@@ -712,7 +712,7 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 	int color;
 	int n_task_per_image;
     pixel ** p ;
-    pixel * new ;
+    pixel * newp ;
 
 	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
 	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes

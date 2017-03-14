@@ -1,4 +1,5 @@
 #include "parallelSplitMPI.h"
+#include "cudaKernel.h"
 
 MPI_Comm localComm;
 
@@ -89,39 +90,6 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
 
     return 1;
 }
-
-/*
-  int getPartGlobal(int height, int width, int myRank, int nbTasks, int* output, int* rank2dim, int* groupDim)
-  {
-  int tileSize[2];
-  getTileSize(height, width, nbTasks, tileSize);
-
-  int nbX = height / tileSize[0];
-  int nbY = width / tileSize[1];
-  int nbOverX = height % tileSize[0];
-  int nbOverY = width % tileSize[1];
-
-  int x = myRank / nbY;
-  int y = myRank % nbY;
-  if(x >= nbX)
-  {
-  return 0; // no work for this task
-  }
-
-  output[0] = (x * tileSize[0]) + ((x < nbOverX) ? x : nbOverX);
-  output[1] = (y * tileSize[1]) + ((y < nbOverY) ? y : nbOverY);
-  output[2] = output[0] + tileSize[0] + ((x < nbOverX) ? 1 : 0);
-  output[3] = output[1] + tileSize[1] + ((y < nbOverY) ? 1 : 0);
-
-  rank2dim[0] = x;
-  rank2dim[1] = y;
-
-  groupDim[0] = nbX;
-  groupDim[1] = nbY;
-
-  return 1;
-  }
-*/
 
 void copyImg(pixel* input, pixel* output, int inputWidth, int offsetX, int offsetY, int height, int width)
 {
@@ -729,7 +697,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
     int n_iter = 0;
 
     pixel** p;
-    pixel* new;
+    pixel* newp;
 
     int shape[4];
     int myDimRank[2];
@@ -771,8 +739,8 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	// copy part of the original image (with overlaps)
 	copyImg(p[i], myImg, width, shape[0] - size, shape[1] - size, myHeight, myWidth);
 
-	// allocate array of new pixels (with unused overlaps) (* TODO: remove overlaps *)
-	new = (pixel*)malloc(myHeight * myWidth * sizeof(pixel));
+	// allocate array of newp pixels (with unused overlaps) (* TODO: remove overlaps *)
+	newp = (pixel*)malloc(myHeight * myWidth * sizeof(pixel));
 
 	do
 	{
@@ -786,7 +754,8 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	    }
 
 
-	    // apply blur
+		apply_blur_cuda(myHeight, myWidth, size, myImg, newp);
+	    /*// apply blur
 	    for(j = size; j < myHeight - size; j++)
 	    {
 		for(k = size; k < myWidth - size; k++)
@@ -806,11 +775,11 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 			}
 		    }
 
-		    new[CONV(j,k,myWidth)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-		    new[CONV(j,k,myWidth)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-		    new[CONV(j,k,myWidth)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+		    newp[CONV(j,k,myWidth)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+		    newp[CONV(j,k,myWidth)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+		    newp[CONV(j,k,myWidth)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
 		}
-	    }
+	    }*/
 
 	    // actu img and end ?
 	    for(j = size; j < myHeight - size; j++)
@@ -821,9 +790,9 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 		    float diff_g;
 		    float diff_b;
 
-		    diff_r = new[CONV(j,k,myWidth)].r - myImg[CONV(j,k,myWidth)].r;
-		    diff_g = new[CONV(j,k,myWidth)].g - myImg[CONV(j,k,myWidth)].g;
-		    diff_b = new[CONV(j,k,myWidth)].b - myImg[CONV(j,k,myWidth)].b;
+		    diff_r = newp[CONV(j,k,myWidth)].r - myImg[CONV(j,k,myWidth)].r;
+		    diff_g = newp[CONV(j,k,myWidth)].g - myImg[CONV(j,k,myWidth)].g;
+		    diff_b = newp[CONV(j,k,myWidth)].b - myImg[CONV(j,k,myWidth)].b;
 
 		    if ( diff_r > threshold || -diff_r > threshold
 			 ||
@@ -834,9 +803,9 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 			end = 0 ;
 		    }
 
-		    myImg[CONV(j,k,myWidth)].r = new[CONV(j,k,myWidth)].r;
-		    myImg[CONV(j,k,myWidth)].g = new[CONV(j,k,myWidth)].g;
-		    myImg[CONV(j,k,myWidth)].b = new[CONV(j,k,myWidth)].b;
+		    myImg[CONV(j,k,myWidth)].r = newp[CONV(j,k,myWidth)].r;
+		    myImg[CONV(j,k,myWidth)].g = newp[CONV(j,k,myWidth)].g;
+		    myImg[CONV(j,k,myWidth)].b = newp[CONV(j,k,myWidth)].b;
 		}
 	    }
 
@@ -846,11 +815,11 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 
 	} while(threshold > 0 && !end);
 
-	// write new image in root
+	// write newp image in root
 	updateImg(p[i], height, width, myImg, myRank, nbTasks, shape, size);
 
 	free(myImg);
-	free(new);
+	free(newp);
     }
     else
     {

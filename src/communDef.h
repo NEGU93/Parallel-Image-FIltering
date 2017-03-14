@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <math.h>
 #include <sys/time.h>
-#include <mpi.h> /* MPI function signatures */
 
 #include <gif_lib.h>
 

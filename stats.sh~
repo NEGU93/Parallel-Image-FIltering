@@ -20,7 +20,7 @@ finalFile="$destDir/$fileName$suffix.txt"
 echo "N=$1" > $finalFile
 
 if [ -n $2 ] && [[ $2 = "-v" ]]; then
-    srun -N $1 run_test.sh | tee /dev/tty | ./stats >> $finalFile
+    srun -n $1 run_test.sh | tee /dev/tty | ./stats >> $finalFile
 else
-    srun -N $1 run_test.sh | ./stats >> $finalFile
+    srun -n $1 run_test.sh | ./stats >> $finalFile
 fi

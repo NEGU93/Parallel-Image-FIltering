@@ -949,7 +949,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
     }
     else
     {
-	MPI_Comm_split(myComm, 0, myOldRank, &localComm);
+	MPI_Comm_split(myComm, MPI_UNDEFINED, myOldRank, &localComm);
 /*
 // no work for this task
 do

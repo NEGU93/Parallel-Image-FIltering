@@ -23,7 +23,7 @@ animated_gif *load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
-	int me, P;
+	//int me, P;
     int n_images ;
     int * width ;
     int * height ;
@@ -31,8 +31,8 @@ animated_gif *load_pixels( char * filename ) {
     int i ;
     animated_gif * image ;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
 
     /* Open the GIF image (read mode) */
     g = DGifOpenFileName( filename, &error ) ;
@@ -117,7 +117,7 @@ animated_gif *load_pixels( char * filename ) {
 	************************************************/
 
     /* For each image */
-    for ( i = me ; i < n_images ; i += P ) {
+    for ( i = 0 ; i < n_images ; i ++ ) {
         int j ;
         /* Get the local colormap if needed */
         if ( g->SavedImages[i].ImageDesc.ColorMap ) {
@@ -533,14 +533,14 @@ int store_pixels( char * filename, animated_gif * image ) {
 
 void apply_gray_filter( animated_gif * image ) {
     int i, j ;
-	int me, P;
+	//int me, P;
     pixel ** p ;
 	
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i+= P ) {
+    for ( i = 0; i < image->n_images ; i++ ) {
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
             int moy ;
 
@@ -564,11 +564,11 @@ void apply_gray_line( animated_gif * image ) {
 	int me, P;
     pixel ** p ;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
     p = image->p ;
 
-    for ( i = me ; i < image->n_images ; i+= P )
+    for ( i = 0 ; i < image->n_images ; i++ )
     {
         for ( j = 0 ; j < 10 ; j++ )
         {
@@ -724,12 +724,16 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 	MPI_Comm_size(MPI_COMM_LOCAL, &n_task_per_image);
 
     /* Process all images */
-    for ( i = me ; i < image->n_images ; i+= P) {
-		if ( n_task_per_image > 1) {
-        	oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
-		}
-		else {
-			one_task_blur(image, size, threshold, i);
+    for ( i = 0 ; i < image->n_images ; i++) {
+		if ( color == i % P ) {
+			if ( n_task_per_image > 1) {
+        		oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
+			}
+			else {
+				fprintf(stdout, "Calling function\n"); fflush(stdout);
+				one_task_blur(image, size, threshold, i);
+				fprintf(stdout, "Out of function\n"); fflush(stdout);
+			}
 		}
     }
 }
@@ -737,14 +741,14 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
 void apply_sobel_filter( animated_gif * image ) {
     int i, j, k ;
     int width, height ;
-	int me, P;
+	//int me, P;
     pixel ** p;
 
-	MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-	MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-    p = image->p ;
+	//MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+	//MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+    p = image->p;
 
-    for ( i = me ; i < image->n_images ; i += P ) {
+    for ( i = 0 ; i < image->n_images ; i ++ ) {
         width = image->width[i] ;
         height = image->height[i] ;
 
@@ -899,7 +903,7 @@ int main( int argc, char ** argv ) {
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
     //printf( "GIF loaded from file %s with %d image(s) in %lf s\n", input_filename, image->n_images, duration ) ; // commented by Francois
-	if (me == ROOT) { fprintf(stdout, "L %lf\n", duration); } // added by Francois
+	if (me == ROOT) { fprintf(stdout, "L %lf\n", duration); fflush(stdout); } // added by Francois
 
 //**************************************************
 
@@ -915,7 +919,7 @@ int main( int argc, char ** argv ) {
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    if (me == ROOT) { fprintf(stdout, "G %lf\n", duration); } // added by Francois
+    if (me == ROOT) { fprintf(stdout, "G %lf\n", duration); fflush(stdout); } // added by Francois
 
 //**************************************************
 
@@ -930,7 +934,7 @@ int main( int argc, char ** argv ) {
 
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
-    if (me == ROOT) { fprintf(stdout, "B %lf\n", duration); } // added by Francois
+    if (me == ROOT) { fprintf(stdout, "B %lf\n", duration); fflush(stdout); } // added by Francois
 
 //**************************************************
 
@@ -946,7 +950,7 @@ int main( int argc, char ** argv ) {
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
     //printf( "SOBEL done in %lf s\n", duration ) ; // commented by Francois
-    if (me == ROOT) { fprintf(stdout, "S %lf\n", duration); } // added by Francois
+    if (me == ROOT) { fprintf(stdout, "S %lf\n", duration); fflush(stdout); } // added by Francois
 
     /* EXPORT Timer start */
     gettimeofday(&t1, NULL);
@@ -963,7 +967,7 @@ int main( int argc, char ** argv ) {
     duration = (t2.tv_sec -t1.tv_sec)+((t2.tv_usec-t1.tv_usec)/1e6);
 
     //printf( "Export done in %lf s in file %s\n", duration, output_filename ) ; // commented by Francois
-    if (me == ROOT) { fprintf(stdout, "E %lf\n", duration); } // added by Francois
+    if (me == ROOT) { fprintf(stdout, "E %lf\n", duration); fflush(stdout); } // added by Francois
 
 	MPI_Finalize(); /* Finalization of MPI */
     return 0 ;

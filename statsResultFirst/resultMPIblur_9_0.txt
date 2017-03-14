@@ -1,0 +1,7 @@
+N=9
+75 inputs
+Load time : 2.495062
+Gray filter time : 0.768728
+Blur filter time : 7.306384
+Sobel filter time : 2.810123
+Export time : 9.763392

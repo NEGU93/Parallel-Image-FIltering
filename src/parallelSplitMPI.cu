@@ -718,7 +718,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
     width = image->width[i];
     height = image->height[i];
 
-    if(getPartBlur(height, width, size, myOldRank, oldNbTasks, shape, myDimRank, myDimGroup))
+    if(oldNbTasks > 1 && getPartBlur(height, width, size, myOldRank, oldNbTasks, shape, myDimRank, myDimGroup))
     {
 	int nbTasks;
 	int myRank;
@@ -739,9 +739,6 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	// copy part of the original image (with overlaps)
 	copyImg(p[i], myImg, width, shape[0] - size, shape[1] - size, myHeight, myWidth);
 
-	// allocate array of newp pixels (with unused overlaps) (* TODO: remove overlaps *)
-	newp = (pixel*)malloc(myHeight * myWidth * sizeof(pixel));
-
 	do
 	{
 	    end = 1;
@@ -753,7 +750,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 			sendRecvOverlaps2(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
 	    }
 
-		end = apply_blur_cuda(myHeight, myWidth, size, myImg, threshold);
+	    end = apply_blur_cuda(myHeight, myWidth, size, myImg, threshold);
 	    // actu img and end ?
 
 	    int endReduce;
@@ -767,6 +764,45 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 
 	free(myImg);
 	free(newp);
+    }
+    else if(oldNbTasks < 2)
+    {
+	// just 1 task
+	int myHeight2, myWidth2;
+	pixel* myImg2;
+
+	// top
+	myHeight = height / 10;
+	myWidth = width;
+	myImg = (pixel*)malloc(myHeight*myWidth * sizeof(pixel));
+	copyImg(p[i], myImg, width, 0, 0, myHeight, myWidth);
+
+	// bottom
+	myHeight2 = height*0.9;
+	myHeight2 = height - myHeight2;
+	myWidth2 = width;
+	myImg2 = (pixel*)malloc(myHeight2*myWidth2 * sizeof(pixel));
+	copyImg(p[i], myImg2, width, height - myHeight2, 0, myHeight2, myWidth2);
+
+	do
+	{
+	    n_iter++;
+	    end = 1;
+
+	    // top
+	    end = apply_blur_cuda(myHeight, myWidth, size, myImg, threshold) && end;
+
+	    // bottom
+	    end = apply_blur_cuda(myHeight2, myWidth2, size, myImg2, threshold) && end;
+
+	} while(threshold > 0 && !end);
+
+	// update p[i]
+	writeImg(myImg, p[i], width, 0, 0, myHeight, myWidth);
+	writeImg(myImg2, p[i], width, height-myHeight2, 0, myHeight2, myWidth2);
+
+	free(myImg);
+	free(myImg2);
     }
     else
     {

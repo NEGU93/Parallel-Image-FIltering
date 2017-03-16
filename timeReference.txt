@@ -1,0 +1,15 @@
+images/original/051009.vince.gif 0.579462
+images/original/1.gif 0.602861
+images/original/200_s.gif 0.004102
+images/original/9815573.gif 0.292961
+images/original/australian-flag-large.gif 0.175563
+images/original/Campusplan-Hausnr.gif 17.758510
+images/original/Campusplan-Mobilitaetsbeschraenkte.gif 19.430882
+images/original/fire.gif 0.005288
+images/original/frame_002.gif 0.024926
+images/original/giphy-3.gif 3.122362
+images/original/Mandelbrot-large.gif 7.110079
+images/original/porsche.gif 0.008290
+images/original/Produits_sous_linux.gif 0.147698
+images/original/TimelyHugeGnu.gif 0.972947
+images/original/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large.gif 0.949763

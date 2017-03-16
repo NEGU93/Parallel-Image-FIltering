@@ -12,4 +12,5 @@ composite originalFiltered/Mandelbrot-large-sobel.gif processed/Mandelbrot-large
 composite originalFiltered/porsche-sobel.gif processed/porsche-sobel.gif -compose difference compared/porsche-sobel.gif
 composite originalFiltered/TimelyHugeGnu-sobel.gif processed/TimelyHugeGnu-sobel.gif -compose difference compared/TimelyHugeGnu-sobel.gif
 composite originalFiltered/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large-sobel.gif processed/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large-sobel.gif -compose difference compared/tumblr_myxlbtwVEb1qzt4vjo1_r14_500_large-sobel.gif
+composite originalFiltered/Produits_sous_linux-sobel.gif processed/Produits_sous_linux-sobel.gif -compose difference compared/Produits_sous_linux-sobel.gif
 

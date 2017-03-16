@@ -824,6 +824,70 @@ void updateImg(pixel* p, int pHeight, int pWidth, pixel* myImg, int myRank, int 
     }
 }
 
+int blurOnePart(pixel* myImg, pixel* newp, int myHeight, int myWidth, int size, int threshold)
+{
+    int j,k;
+    int end;
+
+    end = 1;
+
+    // apply blur
+    for(j = size; j < myHeight - size; j++)
+    {
+	for(k = size; k < myWidth - size; k++)
+	{
+	    int stencil_j, stencil_k ;
+	    int t_r = 0 ;
+	    int t_g = 0 ;
+	    int t_b = 0 ;
+
+	    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
+	    {
+		for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
+		{
+		    t_r += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].r ;
+		    t_g += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].g ;
+		    t_b += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].b ;
+		}
+	    }
+
+	    newp[CONV(j,k,myWidth)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
+	    newp[CONV(j,k,myWidth)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
+	    newp[CONV(j,k,myWidth)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
+	}
+    }
+
+    // actu img and end ?
+    for(j = size; j < myHeight - size; j++)
+    {
+	for(k = size; k < myWidth - size; k++)
+	{
+	    float diff_r;
+	    float diff_g;
+	    float diff_b;
+
+	    diff_r = newp[CONV(j,k,myWidth)].r - myImg[CONV(j,k,myWidth)].r;
+	    diff_g = newp[CONV(j,k,myWidth)].g - myImg[CONV(j,k,myWidth)].g;
+	    diff_b = newp[CONV(j,k,myWidth)].b - myImg[CONV(j,k,myWidth)].b;
+
+	    if ( diff_r > threshold || -diff_r > threshold
+		 ||
+		 diff_g > threshold || -diff_g > threshold
+		 ||
+		 diff_b > threshold || -diff_b > threshold
+		) {
+		end = 0 ;
+	    }
+
+	    myImg[CONV(j,k,myWidth)].r = newp[CONV(j,k,myWidth)].r;
+	    myImg[CONV(j,k,myWidth)].g = newp[CONV(j,k,myWidth)].g;
+	    myImg[CONV(j,k,myWidth)].b = newp[CONV(j,k,myWidth)].b;
+	}
+    }
+
+    return end;
+}
+
 void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm, int indexImg)
 {
     int i = indexImg;
@@ -834,7 +898,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
     int n_iter = 0;
 
     pixel** p;
-    pixel* new;
+    pixel* newp;
 
     int shape[4];
     int myDimRank[2];
@@ -855,7 +919,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
     width = image->width[i];
     height = image->height[i];
 
-    if(getPartBlur(height, width, size, myOldRank, oldNbTasks, shape, myDimRank, myDimGroup))
+    if(oldNbTasks > 1 && getPartBlur(height, width, size, myOldRank, oldNbTasks, shape, myDimRank, myDimGroup))
     {
 	int nbTasks;
 	int myRank;
@@ -876,12 +940,11 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	// copy part of the original image (with overlaps)
 	copyImg(p[i], myImg, width, shape[0] - size, shape[1] - size, myHeight, myWidth);
 
-	// allocate array of new pixels (with unused overlaps) (* TODO: remove overlaps *)
-	new = (pixel*)malloc(myHeight * myWidth * sizeof(pixel));
+	// allocate array of newp pixels (with unused overlaps) (* TODO: remove overlaps *)
+	newp = (pixel*)malloc(myHeight * myWidth * sizeof(pixel));
 
 	do
 	{
-	    end = 1;
 	    n_iter++;
 
 	    if(n_iter > 0)
@@ -890,60 +953,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 		sendRecvOverlaps2(myImg, myRank, myDimRank, myDimGroup, myHeight, myWidth, size);
 	    }
 
-
-	    // apply blur
-	    for(j = size; j < myHeight - size; j++)
-	    {
-		for(k = size; k < myWidth - size; k++)
-		{
-		    int stencil_j, stencil_k ;
-		    int t_r = 0 ;
-		    int t_g = 0 ;
-		    int t_b = 0 ;
-
-		    for ( stencil_j = -size ; stencil_j <= size ; stencil_j++ )
-		    {
-			for ( stencil_k = -size ; stencil_k <= size ; stencil_k++ )
-			{
-			    t_r += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].r ;
-			    t_g += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].g ;
-			    t_b += myImg[CONV(j+stencil_j,k+stencil_k,myWidth)].b ;
-			}
-		    }
-
-		    new[CONV(j,k,myWidth)].r = t_r / ( (2*size+1)*(2*size+1) ) ;
-		    new[CONV(j,k,myWidth)].g = t_g / ( (2*size+1)*(2*size+1) ) ;
-		    new[CONV(j,k,myWidth)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
-		}
-	    }
-
-	    // actu img and end ?
-	    for(j = size; j < myHeight - size; j++)
-	    {
-		for(k = size; k < myWidth - size; k++)
-		{
-		    float diff_r;
-		    float diff_g;
-		    float diff_b;
-
-		    diff_r = new[CONV(j,k,myWidth)].r - myImg[CONV(j,k,myWidth)].r;
-		    diff_g = new[CONV(j,k,myWidth)].g - myImg[CONV(j,k,myWidth)].g;
-		    diff_b = new[CONV(j,k,myWidth)].b - myImg[CONV(j,k,myWidth)].b;
-
-		    if ( diff_r > threshold || -diff_r > threshold
-			 ||
-			 diff_g > threshold || -diff_g > threshold
-			 ||
-			 diff_b > threshold || -diff_b > threshold
-			) {
-			end = 0 ;
-		    }
-
-		    myImg[CONV(j,k,myWidth)].r = new[CONV(j,k,myWidth)].r;
-		    myImg[CONV(j,k,myWidth)].g = new[CONV(j,k,myWidth)].g;
-		    myImg[CONV(j,k,myWidth)].b = new[CONV(j,k,myWidth)].b;
-		}
-	    }
+	    end = blurOnePart(myImg, newp, myHeight, myWidth, size, threshold);
 
 	    int endReduce;
 	    MPI_Allreduce(&end, &endReduce, 1, MPI_INT, MPI_MIN, myComm);
@@ -955,7 +965,51 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	updateImg(p[i], height, width, myImg, myRank, nbTasks, shape, size);
 
 	free(myImg);
-	free(new);
+	free(newp);
+    }
+    else if(oldNbTasks < 2)
+    {
+	int myHeight2, myWidth2;
+	pixel* myImg2;
+	pixel* newp2;
+
+	// top
+	myHeight = height / 10;
+	myWidth = width;
+	myImg = (pixel*)malloc(myHeight*myWidth * sizeof(pixel));
+	newp = (pixel*)malloc(myHeight*myWidth * sizeof(pixel));
+	copyImg(p[i], myImg, width, 0, 0, myHeight, myWidth);
+
+	// bottom
+	myHeight2 = height*0.9;
+	myHeight2 = height - myHeight2;
+	myWidth2 = width;
+	myImg2 = (pixel*)malloc(myHeight2*myWidth2 * sizeof(pixel));
+	newp2 = (pixel*)malloc(myHeight2*myWidth2 * sizeof(pixel));
+	copyImg(p[i], myImg2, width, height - myHeight2, 0, myHeight2, myWidth2);
+
+	do
+	{
+	    n_iter++;
+	    end = 1;
+
+	    // top
+	    end = blurOnePart(myImg, newp, myHeight, myWidth, size, threshold) && end;
+
+	    // bottom
+	    end = blurOnePart(myImg2, newp2, myHeight2, myWidth2, size, threshold) && end;
+
+	} while(threshold > 0 && !end);
+
+	// update p[i]
+	writeImg(myImg, p[i], width, 0, 0, myHeight, myWidth);
+	writeImg(myImg2, p[i], width, height-myHeight2, 0, myHeight2, myWidth2);
+
+
+	free(myImg);
+	free(myImg2);
+	free(newp);
+	free(newp2);
     }
     else
     {

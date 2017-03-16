@@ -1,0 +1,4 @@
+N=2
+
+15 inputs
+Performance: 0.361546

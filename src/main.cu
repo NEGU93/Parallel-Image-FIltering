@@ -33,9 +33,8 @@ animated_gif *load_pixels( char * filename ) {
     int i ;
     animated_gif * image ;
 
-//    MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-//    MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-//    color = me % image->n_images;
+    MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+    MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
 
     /* Open the GIF image (read mode) */
     g = DGifOpenFileName( filename, &error ) ;
@@ -53,6 +52,7 @@ animated_gif *load_pixels( char * filename ) {
 
     /* Grab the number of images and the size of each image */
     n_images = g->ImageCount ;
+	color = me % n_images;
 
     width = (int *)malloc( n_images * sizeof( int ) ) ;
     if ( width == NULL ) {
@@ -121,7 +121,7 @@ animated_gif *load_pixels( char * filename ) {
 
     /* For each image */
     for ( i = 0 ; i < n_images ; i ++ ) {
-	//if ( color == i % P ) {
+	if ( color == i % P ) {
 	int j ;
 	/* Get the local colormap if needed */
 	if ( g->SavedImages[i].ImageDesc.ColorMap ) {
@@ -132,7 +132,7 @@ animated_gif *load_pixels( char * filename ) {
 	}
 
 	/* Traverse the image and fill pixels */
-#pragma omp parallel for schedule(static) private(j)
+	#pragma omp parallel for schedule(static) private(j)
 	for ( j = 0 ; j < width[i] * height[i] ; j++ ) {
 	    int c ;
 	    c = g->SavedImages[i].RasterBits[j] ;
@@ -140,7 +140,7 @@ animated_gif *load_pixels( char * filename ) {
 	    p[i][j].g = colmap->Colors[c].Green ;
 	    p[i][j].b = colmap->Colors[c].Blue ;
 	}
-	//}
+	}
     }
 
     /* Allocate image info */
@@ -168,9 +168,9 @@ int output_modified_read_gif( char * filename, GifFileType * g ) {
     GifFileType * g2 ;
     int error2 ;
 
-#if SOBELF_DEBUG
+	#if SOBELF_DEBUG
     printf( "Starting output to file %s\n", filename ) ;
-#endif
+	#endif
 
     g2 = EGifOpenFileName( filename, false, &error2 ) ;
     if ( g2 == NULL )
@@ -620,7 +620,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 	    }
 
 	    for(j=size; j<height-size; j++) {
-#pragma omp for schedule(static)
+#pragma omp for schedule(static) nowait
 		for(k=size; k<width-size; k++)
 		{
 
@@ -646,6 +646,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		    p[i][CONV(j  ,k  ,width)].b = newp[CONV(j  ,k  ,width)].b ;
 		}
 	    }
+		#pragma omp barrier
 	}
     }
     while ( threshold > 0 && !end ) ;
@@ -674,10 +675,10 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     for ( i = 0 ; i < image->n_images ; i++) {
 	if ( color == i % P ) {
 	    if ( n_task_per_image > 1) {
-		oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
+			oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
 		}
 	    else {
-		one_task_blur(image, size, threshold, i);
+			one_task_blur(image, size, threshold, i);
 		}
 	}
     }
@@ -703,7 +704,7 @@ void apply_sobel_filter( animated_gif * image ) {
 
 	    sobel = (pixel *)malloc(width * height * sizeof( pixel ) ) ;
 #pragma omp parallel firstprivate(j)
-	    {
+			{
         	for(j=1; j<height-1; j++) {
 #pragma omp for schedule(static) nowait
 		    for(k=1; k<width-1; k++) {
@@ -742,7 +743,7 @@ void apply_sobel_filter( animated_gif * image ) {
 			}
 		    }
 		}
-	
+		#pragma omp barrier
 		for(j=1; j<height-1; j++) {
 #pragma omp for schedule(static) nowait
 		    for(k=1; k<width-1; k++) {

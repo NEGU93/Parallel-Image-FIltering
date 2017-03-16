@@ -1,0 +1,174 @@
+\documentclass[conference,compsoc]{IEEEtran}
+%\ifCLASSOPTIONcompsoc
+  %% IEEE Computer Society needs nocompress option
+  % requires cite.sty v4.0 or later (November 2003)
+  %\usepackage[nocompress]{cite}
+%\else
+  % normal IEEE
+  \usepackage{cite}
+%\fi
+\usepackage{amsmath}
+\newcommand{\Mod}[1]{\ (\text{mod}\ #1)}
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+\begin{document}
+
+\title{Speed Up of Image Filtering using Parallel Programming Models}
+% author names and affiliations
+\author{\IEEEauthorblockN{Jos\'{e} Agust\'{i}n Barrachina}
+\IEEEauthorblockA{IEEE Student Member\\
+\'{E}cole Polytechnique\\
+Universit\'{e} Paris-Saclay\\
+Route de Saclay, 91128 Palaiseau, France\\
+Email: joseagustin.barra@gmail.com}
+\and
+\IEEEauthorblockN{Fran\c{c}ois Bidet}
+\IEEEauthorblockA{\'{E}cole Polytechnique\\
+Universit\'{e} Paris-Saclay\\
+Route de Saclay, 91128 Palaiseau, France\\
+Email: francois.bidet@polytechnique.edu}}
+
+% make the title area
+\maketitle
+
+\begin{abstract}
+The aim of this project was to speed-up a target application through multiple parallelism models (MPI, OpenMP and CUDA) for various architectures (CPU and GPU) and conclude which approach is the most suitable for the specific application. 
+\end{abstract}
+\IEEEpeerreviewmaketitle
+
+\section{Introduction}
+A base C/C++ code that implements an image filtering was given. The aim of this work is to optimize the operation time of the code by using parallel programming methods such as MPI, OpenMP and CUDA.
+The base C/C++ code covers a large spectrum of algorithms in HPC and Big Data. The Image Filtering can be seen as a direct application of Big Data programs. This application uses a stencil-based scheme to apply a filter to an existing image or set of images. It means the main process of this code is a traversal of each pixel of the image and the application of a 2D stencil \cite{CoursePage}.
+
+We will work with GIF image because this format has the following advantages:
+\begin{description}
+	\item[$\bullet$] Easy to manipulate
+	\item[$\bullet$] Widespread format (social networks)
+	\item[$\bullet$] Allow animation (multiple images). which can be paralized as well.
+\end{description}
+
+\subsection{Project Organization}
+This project was done using github version control repository. Each different strategy of parallelizing was made in a different branch, having as master branch the original serial program. So that in the end a merge was done with the strategies that proved to work better.
+
+The different branches are as follows:
+\begin{description}
+	\item[$\bullet$] \textbf{Master} Contains the file with the sequential code.
+	\item[$\bullet$] \textbf{Result} Contains the final realization with a combination of CUDA, MPI and OpenMP.
+	\item[$\bullet$] \textbf{MPI_over_images_of_gif} Applies MPI to treat each image of a gif deparatelly.
+	\item[$\bullet$] \textbf{Bidouille} Applies MPI to divide the work on each image.
+	\item[$\bullet$] \textbf{OpenMP_divide_image} Applies OpenMP to divide the work on each image.
+	\item[$\bullet$] \textbf{CUDA_filtering} Applies CUDA to divide the work on each image.
+\end{description}
+
+%% TODO: get image of github networks and also
+%% Add references to the bulletpoints in there
+
+\subsection{Testing Work}
+To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
+
+Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
+
+With the help of ImageMagik \cite{IMAGEMAGICK}. Two shell files were created to compare the original (serial) program output with the new parallel optimized program in order to check that it works perfectly. The first bash file creates a output image that, if both images are exactly the same, should create a complete black image. Because this method can be difficult to be sure the images are exactly the same, a second bash file was created that compares pixel by pixel each image and output 0 if the image is completely identical.
+
+\section{Image Filtering Program}
+This topic focuses on a specific image filter that is useful to detect objects and edges inside various images. This filter is called Sobel and it applies on a greyscale image. Therefore, the first step is to transform the image from a color one to a set of gray pixels. 
+
+Then, a blur filter is applied to a small part of the images to exclude the borders. Thus, the main goal is to parallelize an application that apply multiple filters (grayscale, blur and Sobel) to a GIF Image (either a single image or an animated gif). \cite{CoursePage}
+\subsection{Structure}
+The algorithm can be divided into three main parts:
+\begin{description}
+	\item[1$\cdot$] GIF import (section \ref{sec:GIF-import})
+	\item[2$\cdot$] SOBEL filter (section \ref{sec:SOBEL-filter})
+	\item[3$\cdot$] Export image (section \ref{sec:Export-image})
+\end{description}
+A main function already measures and output the time taken by each of the three listed parts of the project.
+
+\subsubsection{GIF import}\label{sec:GIF-import}
+This part just load the gif file into a pixel array. 
+
+\subsubsection{SOBEL filter}\label{sec:SOBEL-filter}
+This part of the code applies actually three different filters:
+\begin{description}
+	\item[1$\cdot$] \textbf{Gray Filter} Convert the pixels into a grayscale
+	\item[2$\cdot$] \textbf{Blur Filter} Apply blur filter with convergence value
+	\item[3$\cdot$] \textbf{Sobel Filter} Apply Sobel filter on pixels
+\end{description}
+
+\subsubsection{Export image}\label{sec:Export-image}
+This is just the inverse of the first part (section \ref{sec:GIF-import}). Converts the array of pixels and creates a gif file which is then stored into a folder.
+
+\section{Parallel Optimization Languages}
+%TODO: here we introduce the 3 librariesto do and in what we apply them (n_images, deviding the image.)
+\subsection{MPI}
+MPI stands for Message Passing Interface, is a standardized and portable message-passing system to function on a wide variety of parallel computing architectures. MPI takes each worker as a process and standardizes the message passing operation between them.
+\subsubsection{Treating each gif image separately}
+Each gif image can have several images saved together, the core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
+Two different ways of organizing the work distribution can be applied:
+\begin{enumerate}
+	\item Static Work Distribution
+	\item Dynamic Work Distribution
+\end{enumerate}
+In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "N" images and "P" processes, we can make a rule that follows the following equation:
+\begin{equation}
+task \equiv n \mod P
+\end{equation} 
+Where task will be the number of the process that must work on the image number \textit{n}. Following this rule, should we have 7 images and 7 processes, the distribution will be as follows:
+%TODO: continue this explanation
+
+It was chosen to make a Static no only because it was an easier implementation, but also because gif images are supposed to have all images similar to each other. Supposing each thread is run by a equivalent hardware (which is our case), the time taken by each process to filter each image will be almost the same, and using a dynamic distribution won't be of much help.
+On the contrary, working in dynamic mode will require a thread to control the main program a distribute the work, which will make the program to virtually loose one thread in order to change the distribution which as stated won't be of much use.
+Of course, this approach will not be so should each image of the gif file be very different to each other.
+
+%added by Kujyto
+%begin of Kujyto's part
+\subsubsection{Treating subparts of each image} \label{sec:treating_subparts}
+A master task splits the input images in subpart and sends each subpart to a slave task, which compute the blur filter.
+After the work, the master task merges each part of the original image and finishes the blur filter iteration.
+
+This work can be done as long as the difference between the input image and the blured image is bigger than a predefined threshold.
+
+The biggest problem of this solution is to split the input image in subparts with a overlap area.
+
+We get the best reduction of time with 8 tasks on the same node than any number of tasks on many node because communications between nodes are much slower than in the same node.
+%end of Kujyto's part
+
+\subsection{OpenMP}
+OpenMP stands for Open Multi-Processing. It is an application programming interface (API) that supports milti-platform shared memory multiprocessing programming in C, C++ and Fortran on most platforms, processor architectures and operating systems.
+OpenMP provides a portable, scalable model for developers of shared memory parallel applications.
+It consist of a set of three primary API components:
+\begin{description}
+	\item[1$\cdot$] Compiler Directives
+	\item[2$\cdot$] Runtime Library Routines
+	\item[3$\cdot$] Environmental Variables
+\end{description}
+
+OpenMP comes included in gcc compiler so that only a flag is needed for gcc to compile the Parallel code made with OpenMP.
+
+\subsubsection{Treating subparts of each image}
+As in \ref{sec:treating_subparts}, the goal of this part was to implement a program that divides the image into sections and each thread treats each section. The approach was different than on the MPI implementation. Here, it was not the main which was treated but every specific filter function.
+
+\subsubsection{Results}
+The results were quite effective. Running the algorithm through many different gif images, the Blur Filter Time was reduced by around 75\% . The Sobel Filter Time was reduced around 60\% and the Gray Filter was reduced a 30\%. This results are taken by adding all the different times together and comparing both results of the original program and the OpenMP implementation.
+
+\subsection{CUDA}
+
+\section{Conclusion}
+
+% use section* for acknowledgment
+\ifCLASSOPTIONcompsoc
+  % The Computer Society usually uses the plural form
+  \section*{Acknowledgments}
+\else
+  % regular IEEE prefers the singular form
+  \section*{Acknowledgment}
+\fi
+
+\newpage
+\IEEEtriggeratref{8}
+\bibliographystyle{IEEEtran}
+\bibliography{ref}
+
+\end{document}
+
+

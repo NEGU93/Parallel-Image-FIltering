@@ -3,7 +3,7 @@ HEADER_DIR=include
 OBJ_DIR=obj
 
 CC=nvcc
-CFLAGS=-O3 -I$(HEADER_DIR) -I/users/profs/2016/francois.trahay/soft/install/openmpi-2.0.1/include
+CFLAGS=-O3 -I$(HEADER_DIR) -Xcompiler -fopenmp -I/users/profs/2016/francois.trahay/soft/install/openmpi-2.0.1/include
 LDFLAGS=-lm -L/users/profs/2016/francois.trahay/soft/install/openmpi-2.0.1/lib -lmpi
 
 SRC= dgif_lib.c \

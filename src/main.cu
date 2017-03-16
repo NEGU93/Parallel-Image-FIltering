@@ -393,17 +393,14 @@ int store_pixels( char * filename, animated_gif * image ) {
 		#endif
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
             int found = 0 ;
-			#pragma omp parallel for private(k)
             for ( k = 0 ; k < n_colors ; k++ ) {
                 if ( p[i][j].r == colormap[k].Red &&
                         p[i][j].g == colormap[k].Green &&
                         p[i][j].b == colormap[k].Blue )
                 {
-					#pragma omp atomic
                     found = 1 ;
                 }
             }
-			// here all threds must be coordinated to see the found
             if ( found == 0 ) {
                 if ( n_colors >= 256 ) {
                     fprintf( stderr, "Error: Found too many colors inside the image\n") ;
@@ -450,7 +447,6 @@ int store_pixels( char * filename, animated_gif * image ) {
 
     /* Update the raster bits according to color map */
     for ( i = 0 ; i < image->n_images ; i++ ) {
-		#pragma omp parallel for private(j, k)
         for ( j = 0 ; j < image->width[i] * image->height[i] ; j++ ) {
             int found_index = -1 ;
             for ( k = 0 ; k < n_colors ; k++ ) {
@@ -556,8 +552,11 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		n_iter++ ;
 
 		/* Apply blur on top part of image (10%) */
+		#pragma omp parallel firstprivate(newp, i, j)
+		{
 		for(j=size; j<height/10-size; j++)
 		{
+			#pragma omp for nowait
 			for(k=size; k<width-size; k++)
 			{
 				int stencil_j, stencil_k ;
@@ -584,6 +583,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		/* Copy the middle part of the image */
 		for(j=height/10-size; j<height*0.9+size; j++)
 		{
+			#pragma omp for schedule(static) nowait
 			for(k=size; k<width-size; k++)
 			{
 				newp[CONV(j,k,width)].r = p[i][CONV(j,k,width)].r ; 
@@ -595,6 +595,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		/* Apply blur on the bottom part of the image (10%) */
 		for(j=height*0.9+size; j<height-size; j++)
 		{
+			#pragma omp for schedule(static) nowait
 			for(k=size; k<width-size; k++)
 			{
 				int stencil_j, stencil_k ;
@@ -618,8 +619,8 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 			}
 		}
 
-		for(j=size; j<height-size; j++)
-		{
+		for(j=size; j<height-size; j++) {
+			#pragma omp for schedule(static)
 			for(k=size; k<width-size; k++)
 			{
 
@@ -644,6 +645,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 				p[i][CONV(j  ,k  ,width)].g = newp[CONV(j  ,k  ,width)].g ;
 				p[i][CONV(j  ,k  ,width)].b = newp[CONV(j  ,k  ,width)].b ;
 			}
+		}
 		}
 	}
 	while ( threshold > 0 && !end ) ;

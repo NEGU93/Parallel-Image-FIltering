@@ -31,7 +31,7 @@ int getPartBlur(int height, int width, int size, int myRank, int nbTasks, int* o
     }
     else
     {
-	int tmp = height * 0.9;
+	int tmp = (int)(height * 0.9);
 	stripeHeight = height - tmp - (2*size);
     }
 
@@ -691,13 +691,11 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 {
     int i = indexImg;
 
-    int j,k;
     int width, height;
     int end = 0;
     int n_iter = 0;
 
     pixel** p;
-    pixel* newp;
 
     int shape[4];
     int myDimRank[2];
@@ -763,7 +761,6 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	updateImg(p[i], height, width, myImg, myRank, nbTasks, shape, size);
 
 	free(myImg);
-	free(newp);
     }
     else if(oldNbTasks < 2)
     {
@@ -778,7 +775,7 @@ void oneImageBlur(animated_gif* image, int size, int threshold, MPI_Comm myComm,
 	copyImg(p[i], myImg, width, 0, 0, myHeight, myWidth);
 
 	// bottom
-	myHeight2 = height*0.9;
+	myHeight2 = (int)(height*0.9);
 	myHeight2 = height - myHeight2;
 	myWidth2 = width;
 	myImg2 = (pixel*)malloc(myHeight2*myWidth2 * sizeof(pixel));

@@ -25,7 +25,7 @@ animated_gif *load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
-    int me, P, color;
+//    int me, P, color;
     int n_images ;
     int * width ;
     int * height ;
@@ -33,9 +33,9 @@ animated_gif *load_pixels( char * filename ) {
     int i ;
     animated_gif * image ;
 
-    MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
-    MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-    color = me % image->n_images;
+//    MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
+//    MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
+//    color = me % image->n_images;
 
     /* Open the GIF image (read mode) */
     g = DGifOpenFileName( filename, &error ) ;
@@ -128,7 +128,7 @@ animated_gif *load_pixels( char * filename ) {
 	    /* TODO No support for local color map */
 	    fprintf( stderr, "Error: application does not support local colormap\n" ) ;
 	    return NULL ;
-	    colmap = g->SavedImages[i].ImageDesc.ColorMap ;
+//	    colmap = g->SavedImages[i].ImageDesc.ColorMap ;
 	}
 
 	/* Traverse the image and fill pixels */
@@ -507,7 +507,7 @@ void apply_gray_filter( animated_gif * image ) {
 
 void apply_gray_line( animated_gif * image ) {
     int i, j, k ;
-    int me, P;
+//    int me, P;
     pixel ** p ;
 
     //MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
@@ -593,7 +593,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 	    }
 
 	    /* Apply blur on the bottom part of the image (10%) */
-	    for(j=height*0.9+size; j<height-size; j++)
+	    for(j=(int)(height*0.9)+size; j<height-size; j++)
 	    {
 #pragma omp for schedule(static) nowait
 		for(k=size; k<width-size; k++)
@@ -655,20 +655,16 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
     free (newp) ;
 }
 void apply_blur_filter( animated_gif * image, int size, int threshold ) {
-    int i, j, k ;
-    int width, height ;
-    int end = 0 ;
-    int n_iter = 0 ;
+    int i;
+//    int width, height ;
+//    int end = 0 ;
+//    int n_iter = 0 ;
     int me, P;
     int color;
     int n_task_per_image;
-    pixel ** p ;
-    pixel * newp ;
 
     MPI_Comm_rank(MPI_COMM_WORLD, &me);		// get rank
     MPI_Comm_size(MPI_COMM_WORLD, &P); 		// get number of processes
-    /* Get the pixels of all images */
-    p = image->p ;
 
     color = me % image->n_images;
     MPI_Comm_split(MPI_COMM_WORLD, color, me, &MPI_COMM_LOCAL);
@@ -713,7 +709,7 @@ void apply_sobel_filter( animated_gif * image ) {
 		    for(k=1; k<width-1; k++) {
                 	int pixel_blue_no, pixel_blue_n, pixel_blue_ne;
                 	int pixel_blue_so, pixel_blue_s, pixel_blue_se;
-                	int pixel_blue_o , pixel_blue  , pixel_blue_e ;
+                	int pixel_blue_o , pixel_blue_e ;
 
 			float deltaX_blue ;
 			float deltaY_blue ;
@@ -726,7 +722,6 @@ void apply_sobel_filter( animated_gif * image ) {
 			pixel_blue_s  = p[i][CONV(j+1,k  ,width)].b ;
 			pixel_blue_se = p[i][CONV(j+1,k+1,width)].b ;
 			pixel_blue_o  = p[i][CONV(j  ,k-1,width)].b ;
-			pixel_blue    = p[i][CONV(j  ,k  ,width)].b ;
 			pixel_blue_e  = p[i][CONV(j  ,k+1,width)].b ;
 	
 			deltaX_blue = -pixel_blue_no + pixel_blue_ne - 2*pixel_blue_o + 2*pixel_blue_e - pixel_blue_so + pixel_blue_se;             
@@ -815,6 +810,8 @@ int get_everything_together(animated_gif * image) {
 	    }
 	}
     }
+
+    return 1;
 }
 
 int main( int argc, char ** argv ) {

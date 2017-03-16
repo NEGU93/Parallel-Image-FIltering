@@ -25,7 +25,7 @@ animated_gif *load_pixels( char * filename ) {
     GifFileType * g ;
     ColorMapObject * colmap ;
     int error ;
-//    int me, P, color;
+    int me, P, color;
     int n_images ;
     int * width ;
     int * height ;

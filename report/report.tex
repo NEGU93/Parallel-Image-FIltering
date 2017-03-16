@@ -54,22 +54,23 @@ This project was done using github version control repository. Each different st
 The different branches are as follows:
 \begin{description}
 	\item[$\bullet$] \textbf{Master} Contains the file with the sequential code.
-	\item[$\bullet$] \textbf{Result} Contains the final realization with a combination of CUDA, MPI and OpenMP.
-	\item[$\bullet$] \textbf{MPI_over_images_of_gif} Applies MPI to treat each image of a gif deparatelly.
-	\item[$\bullet$] \textbf{Bidouille} Applies MPI to divide the work on each image.
-	\item[$\bullet$] \textbf{OpenMP_divide_image} Applies OpenMP to divide the work on each image.
-	\item[$\bullet$] \textbf{CUDA_filtering} Applies CUDA to divide the work on each image.
+	\item[$\bullet$] \textbf{Result} Contains the final realization with a combination of CUDA, MPI and OpenMP. Section: \ref{sec:results}
+	\item[$\bullet$] \textbf{MPI\_over\_images\_of\_gif} Applies MPI to treat each image of a gif separatelly. Section: \ref{sec:treating-each-image-sep}
+	\item[$\bullet$] \textbf{Bidouille} Applies MPI to divide the work on each image. Section: \ref{sec:treating_subparts}
+	\item[$\bullet$] \textbf{OpenMP\_divide\_image} Applies OpenMP to divide the work on each image. Section: \ref{sec:OpenMP}
+	\item[$\bullet$] \textbf{CUDA\_filtering} Applies CUDA to divide the work on each image. Section: \ref{sec:CUDA}
 \end{description}
 
-%% TODO: get image of github networks and also
-%% Add references to the bulletpoints in there
+% Add references to the bulletpoints in there
 
 \subsection{Testing Work}
 To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
 
+%TODO: here write about the coefficent test/bash we made. We can put a name to this coefficient to reference it later when explaining the resutls. Something like "expected improvement time coefficient" that will literally be the expected improvement of the gif filtering without knowing anything about the image.
+
 Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
 
-With the help of ImageMagik \cite{IMAGEMAGICK}. Two shell files were created to compare the original (serial) program output with the new parallel optimized program in order to check that it works perfectly. The first bash file creates a output image that, if both images are exactly the same, should create a complete black image. Because this method can be difficult to be sure the images are exactly the same, a second bash file was created that compares pixel by pixel each image and output 0 if the image is completely identical.
+With the help of ImageMagik \cite{IMAGEMAGICK}. Two shell files were created to compare the original (serial) program output with the new parallel optimized program in order to check that it works perfectly. The first bash file creates a output image that, if both images are exactly the same, should create a complete black image. Because this method can be difficult to be sure the images are exactly the same, a second bash file was created that compares pixel by pixel each image and output 0 if the image is completely identical. In that case, the first file is used to check if the images are identical and if they are not, the second bash can be used to see what the mistake is.
 
 \section{Image Filtering Program}
 This topic focuses on a specific image filter that is useful to detect objects and edges inside various images. This filter is called Sobel and it applies on a greyscale image. Therefore, the first step is to transform the image from a color one to a set of gray pixels. 
@@ -99,25 +100,33 @@ This part of the code applies actually three different filters:
 This is just the inverse of the first part (section \ref{sec:GIF-import}). Converts the array of pixels and creates a gif file which is then stored into a folder.
 
 \section{Parallel Optimization Languages}
-%TODO: here we introduce the 3 librariesto do and in what we apply them (n_images, deviding the image.)
-\subsection{MPI}
+\subsection{MPI} \label{sec:MPI}
 MPI stands for Message Passing Interface, is a standardized and portable message-passing system to function on a wide variety of parallel computing architectures. MPI takes each worker as a process and standardizes the message passing operation between them.
-\subsubsection{Treating each gif image separately}
+\subsubsection{Treating each gif image separately} \label{sec:treating-each-image-sep}
 Each gif image can have several images saved together, the core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
 Two different ways of organizing the work distribution can be applied:
 \begin{enumerate}
 	\item Static Work Distribution
 	\item Dynamic Work Distribution
 \end{enumerate}
-In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "N" images and "P" processes, we can make a rule that follows the following equation:
+In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "n" images and "P" processes, we can make a rule that follows the following equation:
 \begin{equation}
 task \equiv n \mod P
 \end{equation} 
-Where task will be the number of the process that must work on the image number \textit{n}. Following this rule, should we have 7 images and 7 processes, the distribution will be as follows:
-%TODO: continue this explanation
+Where task will be the number of the process that must work on the image number \textit{n}. In this case, each process will work in their precomputed images and they will be always the same in each run of the code no matter how much time each process takes with each image.
 
-It was chosen to make a Static no only because it was an easier implementation, but also because gif images are supposed to have all images similar to each other. Supposing each thread is run by a equivalent hardware (which is our case), the time taken by each process to filter each image will be almost the same, and using a dynamic distribution won't be of much help.
-On the contrary, working in dynamic mode will require a thread to control the main program a distribute the work, which will make the program to virtually loose one thread in order to change the distribution which as stated won't be of much use.
+In the case of the dynamic distribution, an initial work (in this case image) is given to each thread, the first one to finish will be given the next work (next image). It is important to notice that in order to manage this distribution, one thread must be used and so it will not be able to do the computation, this is called overhead. For example, if there are three workers and three images, one worker will give the first two images to the remaining two workers, and the first of them to finish will be given the next image to work on.
+
+Both strategies may be useful depending on some variables. For example, if the different images inside the gif file are very different from each other, it may be possible that using dynamic work distribution will make the most of the resources.
+If the nodes or threads have very different computation power, for example, they are run in different computers with very different processors and specifications, then dynamic work distribution may also be more effective in this case.
+Both cases named before are based that the time each threads takes to work is very different from each other, the more difference there is with each thread execution time, the more effective it will be to use dynamic work distribution. If, on the other hand, the computational power of the threads are similar and all the images of a gif image are similar so that is not expected that each thread will take a great difference of time to make the computation, then it in necessary to look for other variables that may make a difference between each method.
+
+The negative impact of the dynamic work case will be dependent on the amount of tasks used for the computation. With three MPI threads, the loss of one task will make a great negative impact as there will be only two tasks to work on each image instead of three. To go to extremes, with only two tasks, applying dynamic distribution will result in a serial work and no optimization will be done. The more MPI tasks are used, the less impact the overhead will have over the code. As a general rule, the less MPI tasks, more convenient it will be to use static work distribution, whereas the more MPI task, better for dynamic distribution as long as there are no more tasks than images of the gif. Should there be more (at least one) MPI tasks than images of the gif file, then the loss of one task to manage the work distribution will not affect the general performance of the code and there will be no relevant difference between both work distributions as each task will manage one image while others will not be used.
+
+The final decision will be a trade off between the difference of time each task takes to do the job and the amount of available tasks, taking also into account the number of images in the gif file to be filtered. This variables however cannot be known for sure beforehand as the intention is to optimize the work for any gif image in general.
+
+It was chosen to make a Static no only because it was an easier implementation, but also because gif images are supposed to have all images similar to each other. Also, each node is supposed to be run at least for our case in similar hardware, for that reason, the time taken by each process to filter each image will be almost the same, and using a dynamic distribution won't be of much help. 
+Also, all the remaining MPI tasks can be used to speed up the computation time treating each image as explained on section \ref{sec:treating_subparts} so that the more MPI tasks I have the better.
 Of course, this approach will not be so should each image of the gif file be very different to each other.
 
 %added by Kujyto
@@ -133,7 +142,17 @@ The biggest problem of this solution is to split the input image in subparts wit
 We get the best reduction of time with 8 tasks on the same node than any number of tasks on many node because communications between nodes are much slower than in the same node.
 %end of Kujyto's part
 
-\subsection{OpenMP}
+\subsubsection{Results}
+When using MPI to treat each image of the gif by each task, there was no increase on performance when the gif has only one image as expected. 
+
+The test was run over seven different gif files that contain more than one image each. The average time to apply for example the blur filter with the original sequential program was 8.1 seconds. This time could be taken down to a minimum of 1.1 seconds. Values were between that range depending on how many MPI tasks were chosen.
+
+Running this code in a gif with 20 high resolution images, the blur filter time was taken down from 4 seconds to 0.4 seconds, which means that the MPI code takes 10\% of the time the sequential filter uses. Using more than 20 tasks takes almost the same time as 20 which is expected as the tasks 21 and higher will not work at all and will only consume communication time.
+The loading of the image however, was not so much improved, taken the time from 0.36 to 0.3 seconds.
+
+% TODO: write something about your performance Fran
+
+\subsection{OpenMP} \label{sec:OpenMP}
 OpenMP stands for Open Multi-Processing. It is an application programming interface (API) that supports milti-platform shared memory multiprocessing programming in C, C++ and Fortran on most platforms, processor architectures and operating systems.
 OpenMP provides a portable, scalable model for developers of shared memory parallel applications.
 It consist of a set of three primary API components:
@@ -148,10 +167,19 @@ OpenMP comes included in gcc compiler so that only a flag is needed for gcc to c
 \subsubsection{Treating subparts of each image}
 As in \ref{sec:treating_subparts}, the goal of this part was to implement a program that divides the image into sections and each thread treats each section. The approach was different than on the MPI implementation. Here, it was not the main which was treated but every specific filter function.
 
-\subsubsection{Results}
+\subsubsection{Results} \label{sec:results}
 The results were quite effective. Running the algorithm through many different gif images, the Blur Filter Time was reduced by around 75\% . The Sobel Filter Time was reduced around 60\% and the Gray Filter was reduced a 30\%. This results are taken by adding all the different times together and comparing both results of the original program and the OpenMP implementation.
 
-\subsection{CUDA}
+\subsection{CUDA}\label{sec:CUDA}
+
+\subsection{CUDA vs OpenMP}
+
+%TODO: make test in Result with the both codes and see wich one works better.
+
+\section{Final program}
+
+%TODO talk about a firs aproach of MPI & OpenMP and then the addition of Bidoulli and CUDA
+
 
 \section{Conclusion}
 
@@ -164,6 +192,7 @@ The results were quite effective. Running the algorithm through many different g
   \section*{Acknowledgment}
 \fi
 
+%TODO: add all the CUDA bibliography
 \newpage
 \IEEEtriggeratref{8}
 \bibliographystyle{IEEEtran}

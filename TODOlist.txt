@@ -1,8 +1,5 @@
-1. Memory problem with CUDA. DONE
 2. Apply CUDA when no MPI used in a image. MAYBE LATER IF TIME
-3. Apply OpenMP. DONE.
-4. See if we can do something with load and store images (maybe point 3)
-5. Make a weighted result printing DONE
+4. See if we can do something with store images
 
 6. Report
 7. PowerPoint

@@ -1,19 +1,14 @@
-This is pdfTeX, Version 3.1415926-2.5-1.40.14 (MiKTeX 2.9) (preloaded format=pdflatex 2015.8.22)  4 MAR 2017 20:08
+This is pdfeTeX, Version 3.141592-1.21a-2.2 (Web2C 7.5.4) (format=pdflatex 2017.3.16)  16 MAR 2017 16:10
 entering extended mode
 **report.tex
-(C:\Users\NEGU\Desktop\Parallel-Image-FIltering\report\report.tex
-LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, afrikaans, ancientgreek, ar
-abic, armenian, assamese, basque, bengali, bokmal, bulgarian, catalan, coptic, 
-croatian, czech, danish, dutch, esperanto, estonian, farsi, finnish, french, ga
-lician, german, german-x-2013-05-26, greek, gujarati, hindi, hungarian, iceland
-ic, indonesian, interlingua, irish, italian, kannada, kurmanji, latin, latvian,
- lithuanian, malayalam, marathi, mongolian, mongolianlmc, monogreek, ngerman, n
-german-x-2013-05-26, nynorsk, oriya, panjabi, pinyin, polish, portuguese, roman
-ian, russian, sanskrit, serbian, slovak, slovenian, spanish, swedish, swissgerm
-an, tamil, telugu, turkish, turkmen, ukenglish, ukrainian, uppersorbian, usengl
-ishmax, welsh, loaded.
-(C:\Users\NEGU\Desktop\Parallel-Image-FIltering\report\IEEEtran.cls
+(./report.tex
+LaTeX2e <2003/12/01>
+Babel <v3.8d> and hyphenation patterns for american, french, german, ngerman, b
+ahasa, basque, bulgarian, catalan, croatian, czech, danish, dutch, esperanto, e
+stonian, finnish, greek, icelandic, irish, italian, latin, magyar, norsk, polis
+h, portuges, romanian, russian, serbian, slovak, slovene, spanish, swedish, tur
+kish, ukrainian, nohyphenation, loaded.
+(./IEEEtran.cls
 Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
 -- See the "IEEEtran_HOWTO" manual for usage information.
 -- http://www.michaelshell.org/tex/ieeetran/
@@ -26,7 +21,7 @@ Document Class: IEEEtran 2015/08/26 V1.8b by Michael Shell
 \@IEEEtrantmptoksA=\toks14
 LaTeX Font Info:    Try loading font information for OT1+ptm on input line 503.
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\psnfss\ot1ptm.fd"
+(/usr/share/texmf/tex/latex/psnfss/ot1ptm.fd
 File: ot1ptm.fd 2001/06/04 font definitions for OT1/ptm.
 )
 -- Using IEEE Computer Society mode.
@@ -124,46 +119,46 @@ LaTeX Font Info:    Font shape `OT1/ptm/bx/it' in size <24.09> not available
 \IEEEPARstartletwidth=\dimen125
 \c@IEEEbiography=\count93
 \@IEEEtranrubishbin=\box27
-) ("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\cite\cite.sty"
-LaTeX Info: Redefining \cite on input line 302.
-LaTeX Info: Redefining \nocite on input line 332.
-Package: cite 2015/02/27  v 5.5
+) (/usr/share/texmf/tex/latex/cite/cite.sty
+LaTeX Info: Redefining \cite on input line 149.
+LaTeX Info: Redefining \nocite on input line 214.
+Package: cite 2003/11/04  v 4.01
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsmath.sty"
-Package: amsmath 2013/01/14 v2.14 AMS math features
+(/usr/share/texmf/tex/latex/amsmath/amsmath.sty
+Package: amsmath 2000/07/18 v2.13 AMS math features
 \@mathmargin=\skip44
 
 For additional information on amsmath, use the `?' option.
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amstext.sty"
+(/usr/share/texmf/tex/latex/amsmath/amstext.sty
 Package: amstext 2000/06/29 v2.01
 
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsgen.sty"
+(/usr/share/texmf/tex/latex/amsmath/amsgen.sty
 File: amsgen.sty 1999/11/30 v2.0
 \@emptytoks=\toks15
 \ex@=\dimen126
 ))
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsbsy.sty"
+(/usr/share/texmf/tex/latex/amsmath/amsbsy.sty
 Package: amsbsy 1999/11/29 v1.2d
 \pmbraise@=\dimen127
 )
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\amsmath\amsopn.sty"
+(/usr/share/texmf/tex/latex/amsmath/amsopn.sty
 Package: amsopn 1999/12/14 v2.01 operator names
 )
 \inf@bad=\count94
-LaTeX Info: Redefining \frac on input line 210.
+LaTeX Info: Redefining \frac on input line 211.
 \uproot@=\count95
 \leftroot@=\count96
-LaTeX Info: Redefining \overline on input line 306.
+LaTeX Info: Redefining \overline on input line 307.
 \classnum@=\count97
 \DOTSCASE@=\count98
-LaTeX Info: Redefining \ldots on input line 378.
-LaTeX Info: Redefining \dots on input line 381.
-LaTeX Info: Redefining \cdots on input line 466.
+LaTeX Info: Redefining \ldots on input line 379.
+LaTeX Info: Redefining \dots on input line 382.
+LaTeX Info: Redefining \cdots on input line 467.
 \Mathstrutbox@=\box28
 \strutbox@=\box29
 \big@size=\dimen128
-LaTeX Font Info:    Redeclaring font encoding OML on input line 566.
-LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OML on input line 567.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 568.
 \macc@depth=\count99
 \c@MaxMatrixCols=\count100
 \dotsspace@=\muskip10
@@ -184,10 +179,11 @@ LaTeX Font Info:    Redeclaring font encoding OMS on input line 567.
 \multlinegap=\skip45
 \multlinetaggap=\skip46
 \mathdisplay@stack=\toks19
-LaTeX Info: Redefining \[ on input line 2665.
-LaTeX Info: Redefining \] on input line 2666.
-)
-(C:\Users\NEGU\Desktop\Parallel-Image-FIltering\report\report.aux)
+LaTeX Info: Redefining \[ on input line 2666.
+LaTeX Info: Redefining \] on input line 2667.
+) (./report.aux)
+\openout1 = `report.aux'.
+
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 15.
 LaTeX Font Info:    ... okay on input line 15.
 LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 15.
@@ -203,18 +199,447 @@ LaTeX Font Info:    ... okay on input line 15.
 
 -- Lines per column: 58 (exact).
 LaTeX Font Info:    Try loading font information for OT1+phv on input line 33.
-("C:\Program Files (x86)\MiKTeX 2.9\tex\latex\psnfss\ot1phv.fd"
+(/usr/share/texmf/tex/latex/psnfss/ot1phv.fd
 File: ot1phv.fd 2001/06/04 scalable font definitions for OT1/phv.
 )
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <14.05249> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 33.
+
+
+LaTeX Warning: Citation `CoursePage' on page 1 undefined on input line 42.
+
 LaTeX Font Info:    Calculating math sizes for size <10.03749> on input line 49
 .
- [1{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}
+! Missing $ inserted.
+<inserted text> 
+                $
+l.51 ...$\bullet$] \textbf{MPI_over_images_of_gif}
+                                                   Applies MPI to treat each...
+
+? 
+! Extra }, or forgotten $.
+<recently read> \egroup 
+                        
+l.51 ...$\bullet$] \textbf{MPI_over_images_of_gif}
+                                                   Applies MPI to treat each...
+
+? 
+
+! LaTeX Error: Command \item invalid in math mode.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.52 	\item
+           [$\bullet$] \textbf{Bidouille} Applies MPI to divide the work on ...
+
+? 
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.52 	\item[$\bullet$]
+                       \textbf{Bidouille} Applies MPI to divide the work on ...
+
+? 
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.52 	\item[$\bullet$]
+                       \textbf{Bidouille} Applies MPI to divide the work on ...
+
+? 
+LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <7.0262> not available
+(Font)              Font shape `OT1/ptm/b/n' tried instead on input line 52.
+
+! LaTeX Error: Command \item invalid in math mode.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.53 	\item
+           [$\bullet$] \textbf{OpenMP_divide_image} Applies OpenMP to divide...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.53 	\item[$\bullet$]
+                       \textbf{OpenMP_divide_image} Applies OpenMP to divide...
+
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.53 	\item[$\bullet$]
+                       \textbf{OpenMP_divide_image} Applies OpenMP to divide...
+
+? 
+
+Overfull \hbox (346.72838pt too wide) in paragraph at lines 51--53
+[]\OT1/ptm/b/n/10.03749 MPI$[]\OML/cmm/m/it/10 ver[]mages[]f[]ifAppliesMPItotre
+ateachimageofagifdeparatelly:[]AppliesMPItodividetheworkoneachimage:[][]$ 
+ []
+
+! Missing $ inserted.
+<inserted text> 
+                $
+l.53 ...em[$\bullet$] \textbf{OpenMP_divide_image}
+                                                   Applies OpenMP to divide ...
+
+? 
+! Extra }, or forgotten $.
+<recently read> \egroup 
+                        
+l.53 ...em[$\bullet$] \textbf{OpenMP_divide_image}
+                                                   Applies OpenMP to divide ...
+
+? 
+
+! LaTeX Error: Command \item invalid in math mode.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.54 	\item
+           [$\bullet$] \textbf{CUDA_filtering} Applies CUDA to divide the wo...
+
+? 
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.54 	\item[$\bullet$]
+                       \textbf{CUDA_filtering} Applies CUDA to divide the wo...
+
+? 
+
+! LaTeX Error: Something's wrong--perhaps a missing \item.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.54 	\item[$\bullet$]
+                       \textbf{CUDA_filtering} Applies CUDA to divide the wo...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...th {#1}\let \f@size #2\selectfont #3}
+                                                  }
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...h {#1}\let \f@size #2\selectfont #3}}
+                                                  
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\text@ ...e {\textdef@ \displaystyle \f@size {#1}}
+                                                  {\textdef@ \textstyle \f@s...
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...th {#1}\let \f@size #2\selectfont #3}
+                                                  }
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...h {#1}\let \f@size #2\selectfont #3}}
+                                                  
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\text@ ...xtstyle \f@size {\firstchoice@false #1}}
+                                                  {\textdef@ \textstyle \sf@...
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...th {#1}\let \f@size #2\selectfont #3}
+                                                  }
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...h {#1}\let \f@size #2\selectfont #3}}
+                                                  
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\text@ ...tstyle \sf@size {\firstchoice@false #1}}
+                                                  {\textdef@ \textstyle \ssf...
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...th {#1}\let \f@size #2\selectfont #3}
+                                                  }
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\textdef@ ...h {#1}\let \f@size #2\selectfont #3}}
+                                                  
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\text@ ...style \ssf@size {\firstchoice@false #1}}
+                                                  \check@mathfonts }
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Extra }, or forgotten $.
+\text@ ...firstchoice@false #1}}\check@mathfonts }
+                                                  
+l.54 	\item[$\bullet$] \textbf{CUDA_filtering}
+                                               Applies CUDA to divide the wo...
+
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing { inserted.
+<to be read again> 
+                   \endgroup 
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing { inserted.
+<to be read again> 
+                   \endgroup 
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing { inserted.
+<to be read again> 
+                   \endgroup 
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+! Missing $ inserted.
+<inserted text> 
+                $
+l.55 \end{description}
+                      
+? 
+! Missing } inserted.
+<inserted text> 
+                }
+l.55 \end{description}
+                      
+? 
+
+Overfull \hbox (57.84238pt too wide) in paragraph at lines 53--56
+[]\OT1/ptm/b/n/10.03749 OpenMP$[]\OML/cmm/m/it/10 ivide[]mageAppliesOpenMPtodiv
+idetheworkoneachimage:[]$ 
+ []
 
 
-] [2]
-(C:\Users\NEGU\Desktop\Parallel-Image-FIltering\report\report.bbl
+LaTeX Warning: Citation `IMAGEMAGICK' on page 1 undefined on input line 73.
+
+
+LaTeX Warning: Reference `sec:GIF-import' on page 1 undefined on input line 82.
+
+
+
+LaTeX Warning: Reference `sec:SOBEL-filter' on page 1 undefined on input line 8
+3.
+
+
+LaTeX Warning: Reference `sec:Export-image' on page 1 undefined on input line 8
+4.
+
+[1{/usr/share/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
+
+
+]
+
+LaTeX Warning: Reference `sec:GIF-import' on page 2 undefined on input line 100
+.
+
+
+LaTeX Warning: Reference `sec:treating_subparts' on page 2 undefined on input l
+ine 150.
+
+[2] (./report.bbl
 Overfull \hbox (117.58691pt too wide) in paragraph at lines 26--29
 \OT1/ptm/m/n/8.03 https://www.enseignement.polytechnique.fr/profs/informatique/
 Francois.Trahay/www/TD/projects/INF560-
@@ -244,27 +669,34 @@ Before submitting the final camera ready copy, remember to:
 
 [3
 
-] (C:\Users\NEGU\Desktop\Parallel-Image-FIltering\report\report.aux) ) 
-Here is how much of TeX's memory you used:
- 1826 strings out of 493921
- 29180 string characters out of 3144879
- 86644 words of memory out of 3000000
- 5160 multiletter control sequences out of 15000+200000
- 37797 words of font info for 69 fonts, out of 3000000 for 9000
- 844 hyphenation exceptions out of 8191
- 27i,10n,21p,561b,249s stack positions out of 5000i,500n,10000p,200000b,50000s
-{C:/Progr
-am Files (x86)/MiKTeX 2.9/fonts/enc/dvips/fontname/8r.enc}<C:/Program Files (x8
-6)/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files (x86)
-/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Program Files (x86)/Mi
-KTeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files (x86)/MiKT
-eX 2.9/fonts/type1/urw/times/utmb8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/font
-s/type1/urw/times/utmbi8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/ur
-w/times/utmr8a.pfb><C:/Program Files (x86)/MiKTeX 2.9/fonts/type1/urw/times/utm
-ri8a.pfb>
-Output written on report.pdf (3 pages, 93014 bytes).
-PDF statistics:
- 41 PDF objects out of 1000 (max. 8388607)
- 0 named destinations out of 1000 (max. 500000)
- 1 words of extra memory for PDF output out of 10000 (max. 10000000)
+] (./report.aux)
 
+LaTeX Font Warning: Size substitutions with differences
+(Font)              up to 3.24345pt have occurred.
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
+
+ ) 
+Here is how much of TeX's memory you used:
+ 1819 strings out of 94500
+ 28282 string characters out of 1176766
+ 82454 words of memory out of 1000000
+ 5028 multiletter control sequences out of 10000+50000
+ 39743 words of font info for 75 fonts, out of 500000 for 2000
+ 583 hyphenation exceptions out of 1000
+ 27i,16n,21p,569b,271s stack positions out of 1500i,500n,5000p,200000b,5000s
+PDF statistics:
+ 34 PDF objects out of 300000
+ 0 named destinations out of 131072
+ 1 words of extra memory for PDF output out of 65536
+</usr/share/texmf/fonts/type1/bluesky/cm/cmr10.pfb></usr/share/texmf/fonts/ty
+pe1/bluesky/cm/cmmi10.pfb></usr/share/texmf/fonts/type1/bluesky/cm/cmmi7.pfb></
+usr/share/texmf/fonts/type1/bluesky/cm/cmsy10.pfb>{/usr/share/texmf/fonts/enc/d
+vips/psnfss/8r.enc}</usr/share/texmf/fonts/type1/urw/times/utmbi8a.pfb></usr/sh
+are/texmf/fonts/type1/urw/times/utmri8a.pfb></usr/share/texmf/fonts/type1/urw/t
+imes/utmr8a.pfb></usr/share/texmf/fonts/type1/urw/times/utmb8a.pfb>
+Output written on report.pdf (3 pages, 85021 bytes).

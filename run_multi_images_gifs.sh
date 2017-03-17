@@ -1,3 +1,5 @@
+#!/bin/bash
+
 make
 
 INPUT_DIR=images/original

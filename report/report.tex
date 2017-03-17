@@ -7,6 +7,9 @@
   % normal IEEE
   \usepackage{cite}
 %\fi
+\usepackage{graphicx}
+\usepackage{float}
+\graphicspath{{C:/Users/NEGU/Desktop/Parallel-Image-FIltering/report/images/}}
 \usepackage{amsmath}
 \newcommand{\Mod}[1]{\ (\text{mod}\ #1)}
 % correct bad hyphenation here
@@ -48,7 +51,7 @@ We will work with GIF image because this format has the following advantages:
 	\item[$\bullet$] Allow animation (multiple images). which can be paralized as well.
 \end{description}
 
-\subsection{Project Organization}
+\subsection{Project Organization} \label{sec:project-organization}
 This project was done using github version control repository. Each different strategy of parallelizing was made in a different branch, having as master branch the original serial program. So that in the end a merge was done with the strategies that proved to work better.
 
 The different branches are as follows:
@@ -150,6 +153,8 @@ The test was run over seven different gif files that contain more than one image
 Running this code in a gif with 20 high resolution images, the blur filter time was taken down from 4 seconds to 0.4 seconds, which means that the MPI code takes 10\% of the time the sequential filter uses. Using more than 20 tasks takes almost the same time as 20 which is expected as the tasks 21 and higher will not work at all and will only consume communication time.
 The loading of the image however, was not so much improved, taken the time from 0.36 to 0.3 seconds.
 
+% TODO: see the coefficient result. Say that the gther is done only in the end.
+
 % TODO: write something about your performance Fran
 
 \subsection{OpenMP} \label{sec:OpenMP}
@@ -178,8 +183,31 @@ The results were quite effective. Running the algorithm through many different g
 
 \section{Final program}
 
-%TODO talk about a firs aproach of MPI & OpenMP and then the addition of Bidoulli and CUDA
+Figure \ref{fig:Git-Project-Flow-Diagram} shows the sequential work of the project representing the creation and merging of each branch discussed previously on section \ref{sec:project-organization}. The left part of the graph represent an early period in time while the right part is the completion of the actual project code.
 
+\begin{figure}[H]
+	\includegraphics[width=7cm]{GitDiagram.png}	\centering
+	\caption{Git Project Flow Diagram	\label{fig:Git-Project-Flow-Diagram}}
+\end{figure}
+
+As it can be seen in the figure, the first approach was to implement the MPI code with both strategies discussed on \ref{sec:MPI}. The MPI part over each image separately took less time because of less complexity and as soon as it was ready, the OpenMP (\ref{sec:OpenMP}) code was implemented. As soon as this OpenMP was ready, it was merged with the MPI part. In this merge, MPI treated each image in each different node while OpenMP divides the work for that image within each core. This method had two inconveniences, first of all, should the gif file have less images that the MPI threads, some of those threads will be unused. Also, the GPU is not used at all to help in the optimization process.
+
+When running the sequential code, the blur part takes around 70\% of the time. For that reason, the blur filter was taken as a priority and the optimization methods were focused on this part alone. The following explanation of the code was only done for the blur filter, which means that outside the blur filter, the final code works as recently explained.
+
+Before continuing with the explanation of the final code, it will be important to pay attention to the hardware itself. There are a number of computers (nodes), each with it's own CPU and GPU. Only MPI can be used to take advantage of each node so it was used to do exactly that. MPI was used to take advantage of any number of nodes or computers possible. Because it was the aim of the project to try to apply as many languages as possible, MPI was not used or intended to be used to run on the different CPU cores, OpenMP was used for this purpose, which actually obtained better results than MPI, probably because the communication between threads is done in a more efficient way automatically by the compiler. This will be important to understand so that MPI is not run with many processes in the same node. Should that happen, the threads made by MPI within one node will "fight" for the resources inside the computer and will result in a loss of efficiency, although the code should work anyway.
+
+The MPI application was made by a combination of both sections \ref{sec:treating-each-image-sep} and \ref{sec:treating_subparts}. First, MPI uses each thread to work on each image of the gif. Should the threads be more than needed, sub-groups will be created to treat each image with the technique explained in section  \ref{sec:treating_subparts}. If a gif image has for example 2 images, and three nodes are used, then node 0 and 2 will be used to treat the first image while node 1 will work with the second image alone.
+
+This application of both techniques of MPI, however, was only applied to the blur filter alone for the reason stated before. On the blur filter, another step was added. The use of the GPU to make the processing.
+
+\begin{figure}[H]
+	\includegraphics[width=5cm]{gpu.png}	\centering
+	\caption{GPU Architecture \label{fig:GPU-Architecture}}
+\end{figure}
+
+The CUDA kernel was done with a three dimensional block, a two dimensional block for the image itself to make it easy to compute the row and column of the treated image and a third dimension was added to treat each RGB (Red Green Blue) color. In order to make use of the multiprocessors, a two dimensional grid was made as shown in \ref{fig:GPU-Architecture}. In such figure one color architecture is shown. A 2x2 grid is represented with a two dimensional size blocks which corresponds to one of the three colors. Each small green square of the image is a thread or (in the best case scenatio) a GPU core. The row and column of the image to be filtered is a combination of the grid and block index. Whereas the color is given by the z index of each block.
+
+The blur filter makes use of the CUDA kernel to process each image as explained on \ref{sec:CUDA}. It is important to remark that as it was said before, running many MPI threads in one node will make one thread have to wait till the other thread finish using the GPU and will affect the final performance.
 
 \section{Conclusion}
 

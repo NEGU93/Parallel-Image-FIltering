@@ -157,7 +157,8 @@ The loading of the image however, was not so much improved, taken the time from 
 % performance Fran
 When using MPI to treat a splitting part of images by each task, we obtain performances which depends of the size of images in input, the number of tasks MPI and the number of nodes used.
 
-Running this code on the test set given with the sequential version of the program, we obtain the best performance with 8 tasks MPI on 1 node, with an average of coefficient on images between 0.25 and 0.3. But when running it on 2 nodes, we can obtain an average of coefficient on images bigger than 1, which means that is worse than the sequential version.
+Running this code on the test set given with the sequential version of the program, we obtain the best performance with 8 tasks MPI on 1 node, with an average of coefficient on images between 0.25 and 0.3. But when running it on 2 nodes, we can obtain an average of coefficient on images bigger than 1, which means that is worse than the sequential version. This is because for small images, communications take more time than the computation. To reduce this bad effect, we decide to set a minimum size of each tile of the splitting at the size of the overlaps area.
+
 We can however notice the computation time for the blur filter of all this set is smaller than the sequential version, from 35 seconds to about 5 seconds.
 
 \subsection{OpenMP} \label{sec:OpenMP}

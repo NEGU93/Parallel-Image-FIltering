@@ -109,8 +109,8 @@ int apply_blur_cuda(int height, int width, int size, pixel * p, int threshold) {
 	pixel * d_new;
 	int end = 1;
 	int * d_end;
-	dim3 gridDim(80, 80, 1);
-	dim3 blockDim(200, 200, 3 /* Here it MUST be 3 */);
+	dim3 gridDim(200, 200, 1);
+	dim3 blockDim(18, 18, 3 /* Here it MUST be 3 */);
 	/* Alloc everything in device */
 	alloc_device_pixel_array(width, height, &d_p);
 	alloc_device_pixel_array(width, height, &d_new);

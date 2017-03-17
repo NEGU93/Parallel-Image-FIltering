@@ -27,10 +27,19 @@ P.~C. .~F. Trahay. (2016) Inf560 evaluation. [Online]. Available:
   \url{https://www.enseignement.polytechnique.fr/profs/informatique/Francois.Trahay/www/TD/projects/INF560-projects-0.html}
 \BIBentrySTDinterwordspacing
 
+\bibitem{GITREPOSITORY}
+\BIBentryALTinterwordspacing
+NEGU93. (2017, mar) Parallel image filtering. [Online]. Available:
+  \url{https://github.com/NEGU93/Parallel-Image-FIltering}
+\BIBentrySTDinterwordspacing
+
 \bibitem{IMAGEMAGICK}
 \BIBentryALTinterwordspacing
 I.~S. LLC. (1999) Convert, edit, or compose bitmap images. image magick.
   [Online]. Available: \url{https://www.imagemagick.org/script/index.php}
 \BIBentrySTDinterwordspacing
+
+\bibitem{CUDACPROGRAMMINGGUIDE}
+\emph{CUDA C Programming Guide}.
 
 \end{thebibliography}

@@ -52,7 +52,7 @@ We will work with GIF image because this format has the following advantages:
 \end{description}
 
 \subsection{Project Organization} \label{sec:project-organization}
-This project was done using github version control repository. Each different strategy of parallelizing was made in a different branch, having as master branch the original serial program. So that in the end a merge was done with the strategies that proved to work better.
+This project was done using github version control repository \cite{GITREPOSITORY}. Each different strategy of parallelizing was made in a different branch, having as master branch the original serial program. So that in the end a merge was done with the strategies that proved to work better.
 
 The different branches are as follows:
 \begin{description}
@@ -64,12 +64,11 @@ The different branches are as follows:
 	\item[$\bullet$] \textbf{CUDA\_filtering} Applies CUDA to divide the work on each image. Section: \ref{sec:CUDA}
 \end{description}
 
-% Add references to the bulletpoints in there
-
 \subsection{Testing Work}
+
 To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
 
-An other program was done to compute a coefficient which represents the ratio of time taken by our program compare to the time taken with the sequential program version. Then we do the average of this coefficient over each gif computed. We obtain a number which does not depends of the size of each gif.
+Another program was done to compute a coefficient which represents the ratio of time taken by our program compared to the time taken with the sequential program version, which is $ c = T_{t} / T_{p} $ where $c$ is the given coefficient, $T_{t}$ is the time taken by the sequential program and $T_{p}$ is the time taken by the implementation method. By doing the average of this coefficient over a variated amount of gif files we can obtain an estimation of the expected efficiency improvement of a gif image without knowing anything of the file in question. 
 
 Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
 
@@ -92,21 +91,35 @@ A main function already measures and output the time taken by each of the three 
 This part just load the gif file into a pixel array. 
 
 \subsubsection{SOBEL filter}\label{sec:SOBEL-filter}
+The sobel filter or Sobel-Feldman operator is used in image processing and computer vision particularly within edge detection where it creates an image emphasizing the edges. Named after Irwin Sobel and Gary Feldman.
+
 This part of the code applies actually three different filters:
 \begin{description}
-	\item[1$\cdot$] \textbf{Gray Filter} Convert the pixels into a grayscale
-	\item[2$\cdot$] \textbf{Blur Filter} Apply blur filter with convergence value
-	\item[3$\cdot$] \textbf{Sobel Filter} Apply Sobel filter on pixels
+	\item[1$\cdot$] \textbf{Gray Filter} Convert the pixels into a grayscale.
+	\item[2$\cdot$] \textbf{Blur Filter} Apply blur filter with convergence value as seen on Figure \ref{fig:Blur-Filter}. This part take about 70\% of the total processing time.
+	
+	\begin{figure}[H]
+		\includegraphics[width=4cm]{blur.png}	\centering
+		\caption{Blur Filter	\label{fig:Blur-Filter}}
+	\end{figure}
+	
+	\item[3$\cdot$] \textbf{Sobel Filter} Apply Sobel filter on pixels as seen on Figure \ref{fig:Sobel-Filter}.
+	
+	\begin{figure}[H]
+		\includegraphics[width=4cm]{sobel.png}	\centering
+		\caption{Sobel Filter	\label{fig:Sobel-Filter}}
+	\end{figure}
+	
 \end{description}
 
 \subsubsection{Export image}\label{sec:Export-image}
-This is just the inverse of the first part (section \ref{sec:GIF-import}). Converts the array of pixels and creates a gif file which is then stored into a folder.
+The inverse of the first part (section \ref{sec:GIF-import}). Converts the array of pixels and creates a gif file which is then stored into a folder.
 
 \section{Parallel Optimization Languages}
 \subsection{MPI} \label{sec:MPI}
 MPI stands for Message Passing Interface, is a standardized and portable message-passing system to function on a wide variety of parallel computing architectures. MPI takes each worker as a process and standardizes the message passing operation between them.
 \subsubsection{Treating each gif image separately} \label{sec:treating-each-image-sep}
-Each gif image can have several images saved together, the core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
+Each gif image can have several images saved together. The core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
 Two different ways of organizing the work distribution can be applied:
 \begin{enumerate}
 	\item Static Work Distribution
@@ -122,7 +135,7 @@ In the case of the dynamic distribution, an initial work (in this case image) is
 
 Both strategies may be useful depending on some variables. For example, if the different images inside the gif file are very different from each other, it may be possible that using dynamic work distribution will make the most of the resources.
 If the nodes or threads have very different computation power, for example, they are run in different computers with very different processors and specifications, then dynamic work distribution may also be more effective in this case.
-Both cases named before are based that the time each threads takes to work is very different from each other, the more difference there is with each thread execution time, the more effective it will be to use dynamic work distribution. If, on the other hand, the computational power of the threads are similar and all the images of a gif image are similar so that is not expected that each thread will take a great difference of time to make the computation, then it in necessary to look for other variables that may make a difference between each method.
+Both cases named before are based on that the time each threads takes to work is very different from each other, the more difference there is with each thread execution time, the more effective it will be to use dynamic work distribution. If, on the other hand, the computational power of the threads are similar and all the images of a gif image are similar so that is not expected that each thread will take a great difference of time to make the computation, then it in necessary to look for other variables that may make a difference between each method.
 
 The negative impact of the dynamic work case will be dependent on the amount of tasks used for the computation. With three MPI threads, the loss of one task will make a great negative impact as there will be only two tasks to work on each image instead of three. To go to extremes, with only two tasks, applying dynamic distribution will result in a serial work and no optimization will be done. The more MPI tasks are used, the less impact the overhead will have over the code. As a general rule, the less MPI tasks, more convenient it will be to use static work distribution, whereas the more MPI task, better for dynamic distribution as long as there are no more tasks than images of the gif. Should there be more (at least one) MPI tasks than images of the gif file, then the loss of one task to manage the work distribution will not affect the general performance of the code and there will be no relevant difference between both work distributions as each task will manage one image while others will not be used.
 
@@ -131,6 +144,9 @@ The final decision will be a trade off between the difference of time each task 
 It was chosen to make a Static no only because it was an easier implementation, but also because gif images are supposed to have all images similar to each other. Also, each node is supposed to be run at least for our case in similar hardware, for that reason, the time taken by each process to filter each image will be almost the same, and using a dynamic distribution won't be of much help. 
 Also, all the remaining MPI tasks can be used to speed up the computation time treating each image as explained on section \ref{sec:treating_subparts} so that the more MPI tasks I have the better.
 Of course, this approach will not be so should each image of the gif file be very different to each other.
+
+In this part, each thread loads only the image on which is going to work on, an leaves the other images (allocated) but without initializing the values. Because the work distribution is static, each thread will always work in the same image on each filter and stage of the program.
+Just before storing the gif image into memory, a root thread gathers all the information from the other threads. It makes it in no particular order to be able to be a little bit faster as no thread must wait for another to send the information before it can send it.
 
 %added by Kujyto
 %begin of Kujyto's part
@@ -154,8 +170,6 @@ The test was run over seven different gif files that contain more than one image
 Running this code in a gif with 20 high resolution images, the blur filter time was taken down from 4 seconds to 0.4 seconds, which means that the MPI code takes 10\% of the time the sequential filter uses. Using more than 20 tasks takes almost the same time as 20 which is expected as the tasks 21 and higher will not work at all and will only consume communication time.
 The loading of the image however, was not so much improved, taken the time from 0.36 to 0.3 seconds.
 
-% TODO: see the coefficient result. Say that the gther is done only in the end.
-
 When using MPI to treat a splitting part of images by each task, we obtain performances which depends of the size of images in input, the number of tasks MPI and the number of nodes used.
 
 Running this code on the test set given with the sequential version of the program, we obtain the best performance with 8 tasks MPI on 1 node, with an average of coefficient on images between 0.25 and 0.3. But when running it on 2 nodes, we can obtain an average of coefficient on images bigger than 1, which means that is worse than the sequential version. This is because for small images, communications take more time than the computation. To reduce this bad effect, we decide to set a minimum size of each tile of the splitting at the size of the overlaps area.
@@ -177,14 +191,38 @@ OpenMP comes included in gcc compiler so that only a flag is needed for gcc to c
 \subsubsection{Treating subparts of each image}
 As in \ref{sec:treating_subparts}, the goal of this part was to implement a program that divides the image into sections and each thread treats each section. The approach was different than on the MPI implementation. Here, it was not the main which was treated but every specific filter function.
 
+A static schedule was implemented so that similar loops (for example going throught each pixel of the image) was done by the same core and so it was possible to use as less barriers as possible.
+
 \subsubsection{Results} \label{sec:results}
 The results were quite effective. Running the algorithm through many different gif images, the Blur Filter Time was reduced by around 75\% . The Sobel Filter Time was reduced around 60\% and the Gray Filter was reduced a 30\%. This results are taken by adding all the different times together and comparing both results of the original program and the OpenMP implementation.
 
 \subsection{CUDA}\label{sec:CUDA}
 
-\subsection{CUDA vs OpenMP}
+CUDA is a parallel computing platform and API created by Nvidia. It uses the Graphics Processing Unit (GPU) for general purpose processing (GPGPU). The CUDA platform is a software layer that gives direct access to the GPU's virtual instruction set and parallel computation elements, for the execution of kernels.
 
-%TODO: make test in Result with the both codes and see wich one works better.
+CUDA is designed to work with C, C++ and Fortran. For more information on how to implement it with C please refer to \cite{CUDACPROGRAMMINGGUIDE}.
+
+Throughout history, GPU's evolved to into a highly parallel multi-core systems allowing very efficient manipulation of large blocks of data, which normally makes computation faster than a CPU when large processing of data can be done in parallel.
+
+\subsubsection{CUDA vs OpenMP}
+
+The difference between the CPU and the GPU's computation power is that, as seen in figure \ref{fig:cpu-gpu}, the CPU has less cores than the GPU, so that it can do less operations in parallel. However, the CPU cores are faster to do complex operations as branches and loops.
+
+\begin{figure}[H]
+	\includegraphics[width=7cm]{cpu-and-gpu.jpg}	\centering
+	\caption{CPU and GPU comparisson	\label{fig:cpu-gpu}}
+\end{figure}
+
+It was difficult to implement both CUDA and OpenMP at the same time. The loops could be divided between both so that, for example the GPU works in one half of the image while the CPU on the other half. We could go even further and check the amount of time each one takes and if, for example GPU does the computations twice as fast, then process the 2/3 of the image with the GPU and 1/3 with the CPU. Of course if that is to be implemented it will depend a lot on the GPU and CPU that is used to run the program so it will be difficult to implement it for a general case.
+
+MPI can also be used to run two tasks on one node and use OpenMP for one thread and CUDA for the other node but this case will only make the programming easier whereas the real performance will be the same.
+
+Running both CUDA and OpenMP was too difficult to implement and because of limited amount of time it was decided to implement only one of them at each time.
+
+\subsubsection{Results}
+
+It was expected, as image processing is normally very efficient with GPU processing, to obtain better results with the CUDA implementation. However, this is not what happened. OpenMP obtained almost 4 times better performance, taking less than 6 seconds to do something CUDA's implementation did between 19 and 20 seconds. 
+This was probably do to a very complex operations for the cores of the GPU, less computation should have been applied to each of the processors.
 
 \section{Final program}
 
@@ -216,16 +254,10 @@ The blur filter makes use of the CUDA kernel to process each image as explained 
 
 \section{Conclusion}
 
-% use section* for acknowledgment
-\ifCLASSOPTIONcompsoc
-  % The Computer Society usually uses the plural form
-  \section*{Acknowledgments}
-\else
-  % regular IEEE prefers the singular form
-  \section*{Acknowledgment}
-\fi
+Many tools for parallel programming were implemented and tested. It was possible to apply three different API's and compare the strengths and weaknesses of each one.
 
-%TODO: add all the CUDA bibliography
+A sequential code of image filtering was parallelized combining MPI, OpenMP and CUDA to reduce the computation time nearly three times. Even more can be achieved by applying the strategy used for the blur filter in the rest of the code and by improving the performance on the CUDA code which was less than expected.
+
 \newpage
 \IEEEtriggeratref{8}
 \bibliographystyle{IEEEtran}

@@ -1,227 +1,31 @@
 \documentclass[conference,compsoc]{IEEEtran}
-% Some/most Computer Society conferences require the compsoc mode option,
-% but others may want the standard conference format.
-%
-% If IEEEtran.cls has not been installed into the LaTeX system files,
-% manually specify the path to it like:
-% \documentclass[conference,compsoc]{../sty/IEEEtran}
-% or just add the class in the same folder where this tex file is located
-
-% *** Do not adjust lengths that control margins, column widths, etc. ***
-% *** Do not use packages that alter fonts (such as pslatex).         ***
-% There should be no need to do such things with IEEEtran.cls V1.6 and later.
-% (Unless specifically asked to do so by the journal or conference you plan
-% to submit to, of course. )
-
-% Some very useful LaTeX packages include:
-
-% *** MISC UTILITY PACKAGES ***
-%
-%\usepackage{ifpdf}
-% Heiko Oberdiek's ifpdf.sty is very useful if you need conditional
-% compilation based on whether the output is pdf or dvi.
-% usage:
-% \ifpdf
-%   % pdf code
-% \else
-%   % dvi code
-% \fi
-% The latest version of ifpdf.sty can be obtained from:
-% http://www.ctan.org/pkg/ifpdf
-% Also, note that IEEEtran.cls V1.7 and later provides a builtin
-% \ifCLASSINFOpdf conditional that works the same way.
-% When switching from latex to pdflatex and vice-versa, the compiler may
-% have to be run twice to clear warning/error messages.
-
-% *** CITATION PACKAGES ***
-%
-\ifCLASSOPTIONcompsoc
-  % IEEE Computer Society needs nocompress option
+%\ifCLASSOPTIONcompsoc
+  %% IEEE Computer Society needs nocompress option
   % requires cite.sty v4.0 or later (November 2003)
-  \usepackage[nocompress]{cite}
-\else
+  %\usepackage[nocompress]{cite}
+%\else
   % normal IEEE
   \usepackage{cite}
-\fi
-
-% *** GRAPHICS RELATED PACKAGES ***
-%
-\ifCLASSINFOpdf
-  % \usepackage[pdftex]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../pdf/}{../jpeg/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
-\else
-  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
-  % will default to the driver specified in the system graphics.cfg if no
-  % driver is specified.
-  % \usepackage[dvips]{graphicx}
-  % declare the path(s) where your graphic files are
-  % \graphicspath{{../eps/}}
-  % and their extensions so you won't have to specify these with
-  % every instance of \includegraphics
-  % \DeclareGraphicsExtensions{.eps}
-\fi
-% graphicx was written by David Carlisle and Sebastian Rahtz. It is
-% required if you want graphics, photos, etc. graphicx.sty is already
-% installed on most LaTeX systems. The latest version and documentation
-% can be obtained at: 
-% http://www.ctan.org/pkg/graphicx
-% Another good source of documentation is "Using Imported Graphics in
-% LaTeX2e" by Keith Reckdahl which can be found at:
-% http://www.ctan.org/pkg/epslatex
-%
-% latex, and pdflatex in dvi mode, support graphics in encapsulated
-% postscript (.eps) format. pdflatex in pdf mode supports graphics
-% in .pdf, .jpeg, .png and .mps (metapost) formats. Users should ensure
-% that all non-photo figures use a vector format (.eps, .pdf, .mps) and
-% not a bitmapped formats (.jpeg, .png). The IEEE frowns on bitmapped formats
-% which can result in "jaggedy"/blurry rendering of lines and letters as
-% well as large increases in file sizes.
-%
-% You can find documentation about the pdfTeX application at:
-% http://www.tug.org/applications/pdftex
-
-% *** MATH PACKAGES ***
-%
-%\usepackage{amsmath}
-% A popular package from the American Mathematical Society that provides
-% many useful and powerful commands for dealing with mathematics.
-%
-% Note that the amsmath package sets \interdisplaylinepenalty to 10000
-% thus preventing page breaks from occurring within multiline equations. Use:
-%\interdisplaylinepenalty=2500
-% after loading amsmath to restore such page breaks as IEEEtran.cls normally
-% does. amsmath.sty is already installed on most LaTeX systems. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/amsmath
-
-% *** SPECIALIZED LIST PACKAGES ***
-%
-%\usepackage{algorithmic}
-% algorithmic.sty was written by Peter Williams and Rogerio Brito.
-% This package provides an algorithmic environment fo describing algorithms.
-% You can use the algorithmic environment in-text or within a figure
-% environment to provide for a floating algorithm. Do NOT use the algorithm
-% floating environment provided by algorithm.sty (by the same authors) or
-% algorithm2e.sty (by Christophe Fiorio) as the IEEE does not use dedicated
-% algorithm float types and packages that provide these will not provide
-% correct IEEE style captions. The latest version and documentation of
-% algorithmic.sty can be obtained at:
-% http://www.ctan.org/pkg/algorithms
-% Also of interest may be the (relatively newer and more customizable)
-% algorithmicx.sty package by Szasz Janos:
-% http://www.ctan.org/pkg/algorithmicx
-
-% *** ALIGNMENT PACKAGES ***
-%
-%\usepackage{array}
-% Frank Mittelbach's and David Carlisle's array.sty patches and improves
-% the standard LaTeX2e array and tabular environments to provide better
-% appearance and additional user controls. As the default LaTeX2e table
-% generation code is lacking to the point of almost being broken with
-% respect to the quality of the end results, all users are strongly
-% advised to use an enhanced (at the very least that provided by array.sty)
-% set of table tools. array.sty is already installed on most systems. The
-% latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/array
-
-% *** SUBFIGURE PACKAGES ***
-%\ifCLASSOPTIONcompsoc
-%  \usepackage[caption=false,font=footnotesize,labelfont=sf,textfont=sf]{subfig}
-%\else
-%  \usepackage[caption=false,font=footnotesize]{subfig}
 %\fi
-% subfig.sty, written by Steven Douglas Cochran, is the modern replacement
-% for subfigure.sty, the latter of which is no longer maintained and is
-% incompatible with some LaTeX packages including fixltx2e. However,
-% subfig.sty requires and automatically loads Axel Sommerfeldt's caption.sty
-% which will override IEEEtran.cls' handling of captions and this will result
-% in non-IEEE style figure/table captions. To prevent this problem, be sure
-% and invoke subfig.sty's "caption=false" package option (available since
-% subfig.sty version 1.3, 2005/06/28) as this is will preserve IEEEtran.cls
-% handling of captions.
-% Note that the Computer Society format requires a sans serif font rather
-% than the serif font used in traditional IEEE formatting and thus the need
-% to invoke different subfig.sty package options depending on whether
-% compsoc mode has been enabled.
-%
-% The latest version and documentation of subfig.sty can be obtained at:
-% http://www.ctan.org/pkg/subfig
-
-% *** FLOAT PACKAGES ***
-%
-%\usepackage{fixltx2e}
-% fixltx2e, the successor to the earlier fix2col.sty, was written by
-% Frank Mittelbach and David Carlisle. This package corrects a few problems
-% in the LaTeX2e kernel, the most notable of which is that in current
-% LaTeX2e releases, the ordering of single and double column floats is not
-% guaranteed to be preserved. Thus, an unpatched LaTeX2e can allow a
-% single column figure to be placed prior to an earlier double column
-% figure.
-% Be aware that LaTeX2e kernels dated 2015 and later have fixltx2e.sty's
-% corrections already built into the system in which case a warning will
-% be issued if an attempt is made to load fixltx2e.sty as it is no longer
-% needed.
-% The latest version and documentation can be found at:
-% http://www.ctan.org/pkg/fixltx2e
-
-%\usepackage{stfloats}
-% stfloats.sty was written by Sigitas Tolusis. This package gives LaTeX2e
-% the ability to do double column floats at the bottom of the page as well
-% as the top. (e.g., "\begin{figure*}[!b]" is not normally possible in
-% LaTeX2e). It also provides a command:
-%\fnbelowfloat
-% to enable the placement of footnotes below bottom floats (the standard
-% LaTeX2e kernel puts them above bottom floats). This is an invasive package
-% which rewrites many portions of the LaTeX2e float routines. It may not work
-% with other packages that modify the LaTeX2e float routines. The latest
-% version and documentation can be obtained at:
-% http://www.ctan.org/pkg/stfloats
-% Do not use the stfloats baselinefloat ability as the IEEE does not allow
-% \baselineskip to stretch. Authors submitting work to the IEEE should note
-% that the IEEE rarely uses double column equations and that authors should try
-% to avoid such use. Do not be tempted to use the cuted.sty or midfloat.sty
-% packages (also by Sigitas Tolusis) as the IEEE does not format its papers in
-% such ways.
-% Do not attempt to use stfloats with fixltx2e as they are incompatible.
-% Instead, use Morten Hogholm'a dblfloatfix which combines the features
-% of both fixltx2e and stfloats:
-%
-% \usepackage{dblfloatfix}
-% The latest version can be found at:
-% http://www.ctan.org/pkg/dblfloatfix
-
-% *** PDF, URL AND HYPERLINK PACKAGES ***
-%
-%\usepackage{url}
-% url.sty was written by Donald Arseneau. It provides better support for
-% handling and breaking URLs. url.sty is already installed on most LaTeX
-% systems. The latest version and documentation can be obtained at:
-% http://www.ctan.org/pkg/url
-% Basically, \url{my_url_here}.
-
+\usepackage{amsmath}
+\newcommand{\Mod}[1]{\ (\text{mod}\ #1)}
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
-
 \begin{document}
-% Linebreaks \\ can be used within to get better formatting as desired.
-% Do not put math or special symbols in the title.
-\title{Speed Up of Image Filtering using Parallel Programming Models}
 
+\title{Speed Up of Image Filtering using Parallel Programming Models}
 % author names and affiliations
 \author{\IEEEauthorblockN{Jos\'{e} Agust\'{i}n Barrachina}
 \IEEEauthorblockA{IEEE Student Member\\
-Instituto Tecnol\'{o}gico de Buenos Aires (ITBA)\\
-Av Eduardo Madero 399, Buenos Aires, Argentina\\
+\'{E}cole Polytechnique\\
+Universit\'{e} Paris-Saclay\\
+Route de Saclay, 91128 Palaiseau, France\\
 Email: joseagustin.barra@gmail.com}
 \and
 \IEEEauthorblockN{Fran\c{c}ois Bidet}
 \IEEEauthorblockA{\'{E}cole Polytechnique\\
-Université Paris-Saclay\\
+Universit\'{e} Paris-Saclay\\
 Route de Saclay, 91128 Palaiseau, France\\
 Email: francois.bidet@polytechnique.edu}}
 
@@ -235,110 +39,43 @@ The aim of this project was to speed-up a target application through multiple pa
 
 \section{Introduction}
 A base C/C++ code that implements an image filtering was given. The aim of this work is to optimize the operation time of the code by using parallel programming methods such as MPI, OpenMP and CUDA.
-The base C/C++ code covers a large spectrum of algorithms in HPC and Big Data. The Image FIltering can be seen as a direct application of Big Data programs. This application uses a stencil-based scheme to apply a filter to an existing image or set of images. It means the main process of this code is a traversal of each pixel of the image and the application of a 2D stencil \cite{CoursePage}.
+The base C/C++ code covers a large spectrum of algorithms in HPC and Big Data. The Image Filtering can be seen as a direct application of Big Data programs. This application uses a stencil-based scheme to apply a filter to an existing image or set of images. It means the main process of this code is a traversal of each pixel of the image and the application of a 2D stencil \cite{CoursePage}.
 
-% An example of a floating figure using the graphicx package.
-% Note that \label must occur AFTER (or within) \caption.
-% For figures, \caption should occur after the \includegraphics.
-% Note that IEEEtran v1.7 and later has special internal code that
-% is designed to preserve the operation of \label within \caption
-% even when the captionsoff option is in effect. However, because
-% of issues like this, it may be the safest practice to put all your
-% \label just after \caption rather than within \caption{}.
-%
-% Reminder: the "draftcls" or "draftclsnofoot", not "draft", class
-% option should be used if it is desired that the figures are to be
-% displayed while in draft mode.
-%
-%\begin{figure}[!t]
-%\centering
-%\includegraphics[width=2.5in]{myfigure}
-% where an .eps filename suffix will be assumed under latex, 
-% and a .pdf suffix will be assumed for pdflatex; or what has been declared
-% via \DeclareGraphicsExtensions.
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure}
-
-% Note that the IEEE typically puts floats only at the top, even when this
-% results in a large percentage of a column being occupied by floats.
-
-% An example of a double column floating figure using two subfigures.
-% (The subfig.sty package must be loaded for this to work.)
-% The subfigure \label commands are set within each subfloat command,
-% and the \label for the overall figure must come after \caption.
-% \hfil is used as a separator to get equal spacing.
-% Watch out that the combined width of all the subfigures on a 
-% line do not exceed the text width or a line break will occur.
-%
-%\begin{figure*}[!t]
-%\centering
-%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
-%\label{fig_first_case}}
-%\hfil
-%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
-%\label{fig_second_case}}
-%\caption{Simulation results for the network.}
-%\label{fig_sim}
-%\end{figure*}
-%
-% Note that often IEEE papers with subfigures do not employ subfigure
-% captions (using the optional argument to \subfloat[]), but instead will
-% reference/describe all of them (a), (b), etc., within the main caption.
-% Be aware that for subfig.sty to generate the (a), (b), etc., subfigure
-% labels, the optional argument to \subfloat must be present. If a
-% subcaption is not desired, just leave its contents blank,
-% e.g., \subfloat[].
-
-% An example of a floating table. Note that, for IEEE style tables, the
-% \caption command should come BEFORE the table and, given that table
-% captions serve much like titles, are usually capitalized except for words
-% such as a, an, and, as, at, but, by, for, in, nor, of, on, or, the, to
-% and up, which are usually not capitalized unless they are the first or
-% last word of the caption. Table text will default to \footnotesize as
-% the IEEE normally uses this smaller font for tables.
-% The \label must come after \caption as always.
-%
-%\begin{table}[!t]
-%% increase table row spacing, adjust to taste
-%\renewcommand{\arraystretch}{1.3}
-% if using array.sty, it might be a good idea to tweak the value of
-% \extrarowheight as needed to properly center the text within the cells
-%\caption{An Example of a Table}
-%\label{table_example}
-%\centering
-%% Some packages, such as MDW tools, offer better commands for making tables
-%% than the plain LaTeX2e tabular which is used here.
-%\begin{tabular}{|c||c|}
-%\hline
-%One & Two\\
-%\hline
-%Three & Four\\
-%\hline
-%\end{tabular}
-%\end{table}
-
-
-% Note that the IEEE does not put floats in the very first column
-% - or typically anywhere on the first page for that matter. Also,
-% in-text middle ("here") positioning is typically not used, but it
-% is allowed and encouraged for Computer Society conferences (but
-% not Computer Society journals). Most IEEE journals/conferences use
-% top floats exclusively. 
-% Note that, LaTeX2e, unlike IEEE journals/conferences, places
-% footnotes above bottom floats. This can be corrected via the
-% \fnbelowfloat command of the stfloats package.
-
-\section{Image Filtering Program}
-In this section the general C/C++ algorithm will be explained.
-A shell script was created in order to compare the program efficiency against numerous gif files with different size and properties like number of images or colors.
-\subsection{Description}
-This topic focuses on a specific image filter that is useful to detect objects and edges inside various images. This filter is called Sobel and it applies on a greyscale image. Therefore, the first step is to transform the image from a color one to a set of gray pixels. For this purpose, we will work with GIF image because this formate has the following advantages:
+We will work with GIF image because this format has the following advantages:
 \begin{description}
 	\item[$\bullet$] Easy to manipulate
 	\item[$\bullet$] Widespread format (social networks)
-	\item[$\bullet$] Allow animation (multiple images)
+	\item[$\bullet$] Allow animation (multiple images). which can be paralized as well.
 \end{description}
+
+\subsection{Project Organization}
+This project was done using github version control repository. Each different strategy of parallelizing was made in a different branch, having as master branch the original serial program. So that in the end a merge was done with the strategies that proved to work better.
+
+The different branches are as follows:
+\begin{description}
+	\item[$\bullet$] \textbf{Master} Contains the file with the sequential code.
+	\item[$\bullet$] \textbf{Result} Contains the final realization with a combination of CUDA, MPI and OpenMP. Section: \ref{sec:results}
+	\item[$\bullet$] \textbf{MPI\_over\_images\_of\_gif} Applies MPI to treat each image of a gif separatelly. Section: \ref{sec:treating-each-image-sep}
+	\item[$\bullet$] \textbf{Bidouille} Applies MPI to divide the work on each image. Section: \ref{sec:treating_subparts}
+	\item[$\bullet$] \textbf{OpenMP\_divide\_image} Applies OpenMP to divide the work on each image. Section: \ref{sec:OpenMP}
+	\item[$\bullet$] \textbf{CUDA\_filtering} Applies CUDA to divide the work on each image. Section: \ref{sec:CUDA}
+\end{description}
+
+% Add references to the bulletpoints in there
+
+\subsection{Testing Work}
+To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
+
+%TODO: here write about the coefficent test/bash we made. We can put a name to this coefficient to reference it later when explaining the resutls. Something like "expected improvement time coefficient" that will literally be the expected improvement of the gif filtering without knowing anything about the image.
+An other program was done to compute a coefficient which represents the ratio of time taken by our program compare to the time taken with the sequential program version. Then we do the average of this coefficient over each gif computed. We obtain a number which does not depends of the size of each gif.
+
+Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
+
+With the help of ImageMagik \cite{IMAGEMAGICK}. Two shell files were created to compare the original (serial) program output with the new parallel optimized program in order to check that it works perfectly. The first bash file creates a output image that, if both images are exactly the same, should create a complete black image. Because this method can be difficult to be sure the images are exactly the same, a second bash file was created that compares pixel by pixel each image and output 0 if the image is completely identical. In that case, the first file is used to check if the images are identical and if they are not, the second bash can be used to see what the mistake is.
+
+\section{Image Filtering Program}
+This topic focuses on a specific image filter that is useful to detect objects and edges inside various images. This filter is called Sobel and it applies on a greyscale image. Therefore, the first step is to transform the image from a color one to a set of gray pixels. 
+
 Then, a blur filter is applied to a small part of the images to exclude the borders. Thus, the main goal is to parallelize an application that apply multiple filters (grayscale, blur and Sobel) to a GIF Image (either a single image or an animated gif). \cite{CoursePage}
 \subsection{Structure}
 The algorithm can be divided into three main parts:
@@ -363,7 +100,94 @@ This part of the code applies actually three different filters:
 \subsubsection{Export image}\label{sec:Export-image}
 This is just the inverse of the first part (section \ref{sec:GIF-import}). Converts the array of pixels and creates a gif file which is then stored into a folder.
 
-\section{Parallel Optimization Strategies}
+\section{Parallel Optimization Languages}
+\subsection{MPI} \label{sec:MPI}
+MPI stands for Message Passing Interface, is a standardized and portable message-passing system to function on a wide variety of parallel computing architectures. MPI takes each worker as a process and standardizes the message passing operation between them.
+\subsubsection{Treating each gif image separately} \label{sec:treating-each-image-sep}
+Each gif image can have several images saved together, the core of this optimization method was to make each worker to treat each image separately in order to make the process faster.
+Two different ways of organizing the work distribution can be applied:
+\begin{enumerate}
+	\item Static Work Distribution
+	\item Dynamic Work Distribution
+\end{enumerate}
+In the first case, the Static Work Distribution just gives each worker a different but precomputed image. For example, should there be "n" images and "P" processes, we can make a rule that follows the following equation:
+\begin{equation}
+task \equiv n \mod P
+\end{equation} 
+Where task will be the number of the process that must work on the image number \textit{n}. In this case, each process will work in their precomputed images and they will be always the same in each run of the code no matter how much time each process takes with each image.
+
+In the case of the dynamic distribution, an initial work (in this case image) is given to each thread, the first one to finish will be given the next work (next image). It is important to notice that in order to manage this distribution, one thread must be used and so it will not be able to do the computation, this is called overhead. For example, if there are three workers and three images, one worker will give the first two images to the remaining two workers, and the first of them to finish will be given the next image to work on.
+
+Both strategies may be useful depending on some variables. For example, if the different images inside the gif file are very different from each other, it may be possible that using dynamic work distribution will make the most of the resources.
+If the nodes or threads have very different computation power, for example, they are run in different computers with very different processors and specifications, then dynamic work distribution may also be more effective in this case.
+Both cases named before are based that the time each threads takes to work is very different from each other, the more difference there is with each thread execution time, the more effective it will be to use dynamic work distribution. If, on the other hand, the computational power of the threads are similar and all the images of a gif image are similar so that is not expected that each thread will take a great difference of time to make the computation, then it in necessary to look for other variables that may make a difference between each method.
+
+The negative impact of the dynamic work case will be dependent on the amount of tasks used for the computation. With three MPI threads, the loss of one task will make a great negative impact as there will be only two tasks to work on each image instead of three. To go to extremes, with only two tasks, applying dynamic distribution will result in a serial work and no optimization will be done. The more MPI tasks are used, the less impact the overhead will have over the code. As a general rule, the less MPI tasks, more convenient it will be to use static work distribution, whereas the more MPI task, better for dynamic distribution as long as there are no more tasks than images of the gif. Should there be more (at least one) MPI tasks than images of the gif file, then the loss of one task to manage the work distribution will not affect the general performance of the code and there will be no relevant difference between both work distributions as each task will manage one image while others will not be used.
+
+The final decision will be a trade off between the difference of time each task takes to do the job and the amount of available tasks, taking also into account the number of images in the gif file to be filtered. This variables however cannot be known for sure beforehand as the intention is to optimize the work for any gif image in general.
+
+It was chosen to make a Static no only because it was an easier implementation, but also because gif images are supposed to have all images similar to each other. Also, each node is supposed to be run at least for our case in similar hardware, for that reason, the time taken by each process to filter each image will be almost the same, and using a dynamic distribution won't be of much help. 
+Also, all the remaining MPI tasks can be used to speed up the computation time treating each image as explained on section \ref{sec:treating_subparts} so that the more MPI tasks I have the better.
+Of course, this approach will not be so should each image of the gif file be very different to each other.
+
+%added by Kujyto
+%begin of Kujyto's part
+\subsubsection{Treating subparts of each image} \label{sec:treating_subparts}
+A master task splits the input images in subpart and sends each subpart to a slave task, which compute the blur filter.
+After the work, the master task merges each part of the original image and finishes the blur filter iteration.
+
+This work can be done as long as the difference between the input image and the blured image is bigger than a predefined threshold.
+
+The biggest problem of this solution is to split the input image in subparts with a overlap area. To do that, we extract the two areas to blur, the top and the bottom, and we try to split each area with rectangles ``as squares as possible'' : we assume we have just one task for this region, then if we have enough tasks we add one task in each row if the width is greater than the height, else we add one task in each column.
+Then we adjust the width and the height of each tile to cover the entire area to blur. Each task wrap its part of the image in a pixel array which contain the overlaps area in each direction.
+
+The blur algorithm needs now to update the overlaps area of each task's neighbors. To do that, we apply two exchange between to tasks in each direction : top $\leftrightarrow$ bottom, left $\leftrightarrow$ right, top left $\leftrightarrow$ bottom right, top right $\leftrightarrow$ bottom left.
+
+%We get the best reduction of time with 8 tasks on the same node than any number of tasks on many node because communications between nodes are much slower than in the same node.
+%end of Kujyto's part
+
+\subsubsection{Results}
+When using MPI to treat each image of the gif by each task, there was no increase on performance when the gif has only one image as expected. 
+
+The test was run over seven different gif files that contain more than one image each. The average time to apply for example the blur filter with the original sequential program was 8.1 seconds. This time could be taken down to a minimum of 1.1 seconds. Values were between that range depending on how many MPI tasks were chosen.
+
+Running this code in a gif with 20 high resolution images, the blur filter time was taken down from 4 seconds to 0.4 seconds, which means that the MPI code takes 10\% of the time the sequential filter uses. Using more than 20 tasks takes almost the same time as 20 which is expected as the tasks 21 and higher will not work at all and will only consume communication time.
+The loading of the image however, was not so much improved, taken the time from 0.36 to 0.3 seconds.
+
+% performance Fran
+When using MPI to treat a splitting part of images by each task, we obtain performances which depends of the size of images in input, the number of tasks MPI and the number of nodes used.
+
+Running this code on the test set given with the sequential version of the program, we obtain the best performance with 8 tasks MPI on 1 node, with an average of coefficient on images between 0.25 and 0.3. But when running it on 2 nodes, we can obtain an average of coefficient on images bigger than 1, which means that is worser than the sequential version.
+We can however notice the computation time for the blur filter of all this set is smaller than the sequential version, from 35 seconds to about 5 seconds.
+
+\subsection{OpenMP} \label{sec:OpenMP}
+OpenMP stands for Open Multi-Processing. It is an application programming interface (API) that supports milti-platform shared memory multiprocessing programming in C, C++ and Fortran on most platforms, processor architectures and operating systems.
+OpenMP provides a portable, scalable model for developers of shared memory parallel applications.
+It consist of a set of three primary API components:
+\begin{description}
+	\item[1$\cdot$] Compiler Directives
+	\item[2$\cdot$] Runtime Library Routines
+	\item[3$\cdot$] Environmental Variables
+\end{description}
+
+OpenMP comes included in gcc compiler so that only a flag is needed for gcc to compile the Parallel code made with OpenMP.
+
+\subsubsection{Treating subparts of each image}
+As in \ref{sec:treating_subparts}, the goal of this part was to implement a program that divides the image into sections and each thread treats each section. The approach was different than on the MPI implementation. Here, it was not the main which was treated but every specific filter function.
+
+\subsubsection{Results} \label{sec:results}
+The results were quite effective. Running the algorithm through many different gif images, the Blur Filter Time was reduced by around 75\% . The Sobel Filter Time was reduced around 60\% and the Gray Filter was reduced a 30\%. This results are taken by adding all the different times together and comparing both results of the original program and the OpenMP implementation.
+
+\subsection{CUDA}\label{sec:CUDA}
+
+\subsection{CUDA vs OpenMP}
+
+%TODO: make test in Result with the both codes and see wich one works better.
+
+\section{Final program}
+
+%TODO talk about a firs aproach of MPI & OpenMP and then the addition of Bidoulli and CUDA
+
 
 \section{Conclusion}
 
@@ -376,29 +200,12 @@ This is just the inverse of the first part (section \ref{sec:GIF-import}). Conve
   \section*{Acknowledgment}
 \fi
 
-% references section
+%TODO: add all the CUDA bibliography
+\newpage
+\IEEEtriggeratref{8}
+\bibliographystyle{IEEEtran}
+\bibliography{ref}
 
-% can use a bibliography generated by BibTeX as a .bbl file
-% BibTeX documentation can be easily obtained at:
-% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
-% The IEEEtran BibTeX style support page is at:
-% http://www.michaelshell.org/tex/ieeetran/bibtex/
-%\bibliographystyle{IEEEtran}
-% argument is your BibTeX string definitions and bibliography database(s)
-%\bibliography{IEEEabrv,../bib/paper}
-%
-% <OR> manually copy in the resultant .bbl file
-% set second argument of \begin to the number of references
-% (used to reserve space for the reference number labels box)
-\begin{thebibliography}{1}
-
-\bibitem{CoursePage}
-P.~Carribault and F.~Trahay, \emph{INF560 Evaluation}, 3rd~ed.\hskip 1em plus
-  0.5em minus 0.4em\relax https://www.enseignement.polytechnique.fr/profs/informatique/Francois.Trahay/www/TD/projects/INF560-projects-0.html
-
-\end{thebibliography}
-
-% that's all folks
 \end{document}
 
 

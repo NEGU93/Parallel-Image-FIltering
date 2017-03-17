@@ -69,7 +69,7 @@ The different branches are as follows:
 \subsection{Testing Work}
 To test the efficiency of the program, many files were created. A simple C program was done to make a summary of all the results obtained. This summary is only an addition of the time taken to apply the filter to each gif image.
 
-%TODO: here write about the coefficent test/bash we made. We can put a name to this coefficient to reference it later when explaining the resutls. Something like "expected improvement time coefficient" that will literally be the expected improvement of the gif filtering without knowing anything about the image.
+An other program was done to compute a coefficient which represents the ratio of time taken by our program compare to the time taken with the sequential program version. Then we do the average of this coefficient over each gif computed. We obtain a number which does not depends of the size of each gif.
 
 Also, a shell file was created to run many gif images one after the other. Various variations of this shell were made to run the test only on gif files that share some property as for example, containing only one image or on the contrary containing more than one image.
 
@@ -140,9 +140,10 @@ After the work, the master task merges each part of the original image and finis
 
 This work can be done as long as the difference between the input image and the blured image is bigger than a predefined threshold.
 
-The biggest problem of this solution is to split the input image in subparts with a overlap area.
+The biggest problem of this solution is to split the input image in subparts with a overlap area. To do that, we extract the two areas to blur, the top and the bottom, and we try to split each area with rectangles ``as squares as possible'' : we assume we have just one task for this region, then if we have enough tasks we add one task in each row if the width is greater than the height, else we add one task in each column.
+Then we adjust the width and the height of each tile to cover the entire area to blur. Each task wrap its part of the image in a pixel array which contain the overlaps area in each direction.
 
-We get the best reduction of time with 8 tasks on the same node than any number of tasks on many node because communications between nodes are much slower than in the same node.
+The blur algorithm needs now to update the overlaps area of each task's neighbors. To do that, we apply two exchange between to tasks in each direction : top $\leftrightarrow$ bottom, left $\leftrightarrow$ right, top left $\leftrightarrow$ bottom right, top right $\leftrightarrow$ bottom left.
 %end of Kujyto's part
 
 \subsubsection{Results}
@@ -155,7 +156,11 @@ The loading of the image however, was not so much improved, taken the time from 
 
 % TODO: see the coefficient result. Say that the gther is done only in the end.
 
-% TODO: write something about your performance Fran
+When using MPI to treat a splitting part of images by each task, we obtain performances which depends of the size of images in input, the number of tasks MPI and the number of nodes used.
+
+Running this code on the test set given with the sequential version of the program, we obtain the best performance with 8 tasks MPI on 1 node, with an average of coefficient on images between 0.25 and 0.3. But when running it on 2 nodes, we can obtain an average of coefficient on images bigger than 1, which means that is worse than the sequential version. This is because for small images, communications take more time than the computation. To reduce this bad effect, we decide to set a minimum size of each tile of the splitting at the size of the overlaps area.
+
+We can however notice the computation time for the blur filter of all this set is smaller than the sequential version, from 35 seconds to about 5 seconds.
 
 \subsection{OpenMP} \label{sec:OpenMP}
 OpenMP stands for Open Multi-Processing. It is an application programming interface (API) that supports milti-platform shared memory multiprocessing programming in C, C++ and Fortran on most platforms, processor architectures and operating systems.

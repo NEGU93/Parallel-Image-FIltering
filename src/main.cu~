@@ -618,7 +618,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		    newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
 		}
 	    }
-
+		#pragma omp barrier
 	    for(j=size; j<height-size; j++) {
 #pragma omp for schedule(static) nowait
 		for(k=size; k<width-size; k++)
@@ -674,12 +674,12 @@ void apply_blur_filter( animated_gif * image, int size, int threshold ) {
     /* Process all images */
     for ( i = 0 ; i < image->n_images ; i++) {
 	if ( color == i % P ) {
-	    if ( n_task_per_image > 1) {
+	    //if ( n_task_per_image > 1) {
 			oneImageBlur(image, size, threshold, MPI_COMM_LOCAL, i);
-		}
+		/*}
 	    else {
 			one_task_blur(image, size, threshold, i);
-		}
+		}*/
 	}
     }
 }

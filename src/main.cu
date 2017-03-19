@@ -618,7 +618,7 @@ void one_task_blur(animated_gif * image, int size, int threshold, int i) {
 		    newp[CONV(j,k,width)].b = t_b / ( (2*size+1)*(2*size+1) ) ;
 		}
 	    }
-
+		#pragma omp barrier
 	    for(j=size; j<height-size; j++) {
 #pragma omp for schedule(static) nowait
 		for(k=size; k<width-size; k++)

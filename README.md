@@ -8,11 +8,8 @@ This project aims to speed up image filtering operations through various paralle
 
 ## Parallelism Models Implemented
 
-### 🖥️ CPU-based Approaches
 - **OpenMP**: Shared-memory parallelization for multi-core CPU systems
 - **MPI**: Message Passing Interface for distributed computing across multiple processes
-
-### 🚀 GPU-based Approach
 - **CUDA**: GPU acceleration using NVIDIA's parallel computing platform
 
 ## Features
@@ -22,21 +19,6 @@ This project aims to speed up image filtering operations through various paralle
 - Cross-architecture optimization analysis
 - Scalability testing across different system configurations
 - Comprehensive performance metrics and timing analysis
-
-## Project Structure
-
-```
-Parallel-Image-Filtering/
-├── src/
-│   ├── openmp/          # OpenMP implementations
-│   ├── mpi/             # MPI implementations
-│   ├── cuda/            # CUDA implementations
-│   └── sequential/      # Sequential baseline implementations
-├── benchmarks/          # Performance testing scripts
-├── results/            # Performance analysis results
-├── images/             # Test images for filtering
-└── docs/               # Documentation and reports
-```
 
 ## Prerequisites
 
@@ -85,49 +67,6 @@ sudo yum install openmpi openmpi-devel
 - Install CUDA Toolkit from [NVIDIA Developer](https://developer.nvidia.com/cuda-toolkit)
 - Ensure compatible GPU drivers are installed
 
-## Compilation
-
-### OpenMP Version
-```bash
-cd src/openmp
-make
-```
-
-### MPI Version
-```bash
-cd src/mpi
-make
-```
-
-### CUDA Version
-```bash
-cd src/cuda
-make
-```
-
-## Usage
-
-### Running Sequential Baseline
-```bash
-./sequential_filter input_image.jpg output_image.jpg [filter_type]
-```
-
-### Running OpenMP Version
-```bash
-export OMP_NUM_THREADS=4
-./openmp_filter input_image.jpg output_image.jpg [filter_type]
-```
-
-### Running MPI Version
-```bash
-mpirun -np 4 ./mpi_filter input_image.jpg output_image.jpg [filter_type]
-```
-
-### Running CUDA Version
-```bash
-./cuda_filter input_image.jpg output_image.jpg [filter_type]
-```
-
 ## Supported Filter Types
 
 - Gaussian Blur
@@ -135,36 +74,6 @@ mpirun -np 4 ./mpi_filter input_image.jpg output_image.jpg [filter_type]
 - Median Filter
 - Convolution filters
 - Custom kernel filters
-
-## Benchmarking
-
-Run comprehensive performance tests:
-
-```bash
-cd benchmarks
-./run_all_benchmarks.sh
-```
-
-This will execute all implementations with various image sizes and generate performance comparison reports.
-
-## Performance Analysis
-
-The project includes tools for analyzing:
-
-- **Execution time** across different parallelization approaches
-- **Speedup calculations** compared to sequential implementation
-- **Scalability analysis** with varying number of threads/processes
-- **Memory usage** and efficiency metrics
-- **GPU utilization** statistics for CUDA implementation
-
-## Results and Findings
-
-Performance results and analysis can be found in the `results/` directory, including:
-
-- Comparative performance charts
-- Scalability analysis graphs
-- Architecture-specific optimization recommendations
-- Best practices for each parallelization model
 
 ## Key Insights
 
